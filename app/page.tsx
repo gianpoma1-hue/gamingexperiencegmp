@@ -1,15 +1,19 @@
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import HowItWorks from "@/components/HowItWorks";
-import Stats from "@/components/Stats";
+import Navbar from "@/components/layout/Navbar";
+import Hero from "@/components/sections/Hero";
+import NextTournament from "@/components/sections/NextTournament";
+import Ranking from "@/components/sections/Ranking";
+import HowItWorks from "@/components/sections/HowItWorks";
+import Footer from "@/components/footer/footer";
 
 export default function Home() {
   return (
     <>
       <Navbar />
       <Hero />
+      <NextTournament />
+      <Ranking />
       <HowItWorks />
-      <Stats />
+      <Footer />
     </>
   );
 }
