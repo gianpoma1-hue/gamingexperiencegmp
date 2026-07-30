@@ -273,7 +273,7 @@ export default function Bracket({
                 Final
               </h2>
 
-              <div ref={(el) => (cardRefs.current["FINAL"] = el)}>
+              <div ref={(el) => { cardRefs.current["FINAL"] = el; }}>
                 <MatchCard
                   id={partidoFinal.id}
                   torneoId={torneoId}
