@@ -1,109 +1,83 @@
-import Image from "next/image";
+﻿import Image from "next/image";
+import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
+import CyberBackground from "./CyberBackground";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen bg-black overflow-hidden pt-32">
+    <section className="relative overflow-hidden min-h-[900px] flex items-center">
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/images/hero-bg.png')" }}
+      />
+      <div className="absolute inset-0 bg-black/45" />
 
-      {/* Luces de fondo */}
-      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-red-600/20 blur-[180px]" />
-      <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full bg-red-700/20 blur-[180px]" />
+      <div
+        className="absolute left-[-100px] bottom-[60px] w-[700px] h-[700px] rounded-full blur-[130px] pointer-events-none z-0"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(37,99,235,.55) 0%, rgba(37,99,235,.25) 40%, transparent 72%)",
+        }}
+      />
 
-      <div className="relative max-w-7xl mx-auto px-8">
-
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
-
-          {/* Texto */}
-          <div>
-
-            <p className="uppercase tracking-[6px] text-red-600 font-bold mb-6">
-              Gaming Experience GMP
-            </p>
-
-            <h1 className="text-5xl md:text-7xl font-black text-white leading-none">
-              SUBÍ DE NIVEL
+      <div className="relative z-10 max-w-[1600px] mx-auto w-full px-8">
+        <div className="grid lg:grid-cols-2 items-center gap-10">
+          <div className="max-w-2xl">
+            <h1 className="font-black leading-[0.95]">
+              <span className="block text-[64px] text-white">SUBI DE NIVEL</span>
+              <span className="block text-[64px] text-red-600 mt-3">
+                GANA PREMIOS
+              </span>
             </h1>
 
-            <h2 className="text-5xl md:text-7xl font-black text-red-600 mt-3">
-              GANÁ PREMIOS
-            </h2>
-
-            <p className="text-zinc-400 text-xl leading-8 mt-8 max-w-xl">
-              Competí en torneos de EA SPORTS FC contra los mejores jugadores,
-              escalá posiciones en el ranking y ganá premios reales.
+            <p className="mt-10 text-zinc-400 text-2xl leading-10">
+              Competi­ en torneos de los mejores videojuegos,
+              escala posiciones y consegui­ premios reales.
             </p>
 
-            {/* Botones */}
-            <div className="flex flex-wrap gap-5 mt-10">
-
-              <button className="bg-red-600 hover:bg-red-700 transition duration-300 px-8 py-4 rounded-xl font-bold text-lg">
-                INSCRIBIRME
-              </button>
-
-              <button className="border border-zinc-700 hover:border-red-600 hover:text-red-500 transition duration-300 px-8 py-4 rounded-xl font-bold flex items-center gap-2">
-                VER TORNEOS
-                <FaArrowRight />
-              </button>
-
-            </div>
-
-            {/* Contador visual */}
-            <div className="mt-16">
-
-              <p className="uppercase text-zinc-500 tracking-[5px] mb-6">
-                Próximo torneo
-              </p>
-
-              <div className="grid grid-cols-4 gap-4 max-w-xl">
-
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl py-5 text-center">
-                  <h3 className="text-4xl font-black text-red-600">03</h3>
-                  <p className="text-zinc-400">Días</p>
-                </div>
-
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl py-5 text-center">
-                  <h3 className="text-4xl font-black text-red-600">14</h3>
-                  <p className="text-zinc-400">Horas</p>
-                </div>
-
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl py-5 text-center">
-                  <h3 className="text-4xl font-black text-red-600">26</h3>
-                  <p className="text-zinc-400">Min</p>
-                </div>
-
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl py-5 text-center">
-                  <h3 className="text-4xl font-black text-red-600">58</h3>
-                  <p className="text-zinc-400">Seg</p>
-                </div>
-
-              </div>
-
-            </div>
-
+            <Link
+              href="/torneos"
+              className="inline-flex items-center gap-3 mt-14 border border-red-600 rounded-xl px-10 py-5 font-bold text-lg hover:bg-red-600/10 transition"
+            >
+              VER TORNEOS
+              <FaArrowRight />
+            </Link>
           </div>
 
-          {/* Imagen */}
-          <div className="flex justify-center">
-
-            <Image
-              src="/images/fifa.png"
-              alt="Gaming Experience GMP"
-              width={650}
-              height={700}
-              priority
+          <div className="relative h-[820px] flex justify-end items-center">
+            <div
+              className="absolute right-[-250px] top-1/2 -translate-y-1/2 w-[1100px] h-[1100px] rounded-full blur-[220px]"
               style={{
-                width: "100%",
-                height: "auto",
-                maxWidth: "650px",
+                background:
+                  "radial-gradient(circle, rgba(255,30,30,.45) 0%, rgba(255,30,30,.15) 45%, transparent 80%)",
               }}
             />
 
+            <div className="relative z-10">
+              <Image
+                src="/images/fifa.png"
+                alt="Gaming Experience GMP"
+                width={900}
+                height={900}
+                priority
+                className="w-auto h-auto max-w-none drop-shadow-[0_40px_100px_rgba(0,0,0,.9)] select-none pointer-events-none"
+              />
+            </div>
           </div>
-
         </div>
-
       </div>
 
+      <div className="absolute bottom-10 left-[-10%] w-[120%] rotate-[-2deg]">
+        <div
+          className="h-[2px] w-full"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(255,40,40,.15) 15%, rgba(255,40,40,.85) 50%, rgba(255,40,40,.15) 85%, transparent 100%)",
+            boxShadow: "0 0 20px rgba(255,40,40,.45)",
+          }}
+        />
+      </div>
     </section>
   );
 }
+

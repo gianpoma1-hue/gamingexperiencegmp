@@ -1,59 +1,171 @@
-import Image from "next/image";
+﻿"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import NotificationBell from "./NotificationBell";
+import MessagesBell from "./MessagesBell";
+import { FaUserShield, FaChartLine } from "react-icons/fa";
 
 export default function Navbar() {
+  const router = useRouter();
+  const { user, isAdmin, logout } = useAuth();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    setMenuOpen(false);
+    router.push("/");
+  };
+
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-black/70 backdrop-blur-xl border-b border-red-900/40">
-      <div className="max-w-7xl mx-auto h-20 flex items-center justify-between px-8">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-zinc-800">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
 
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-
-          <Image
+        {/* LOGO */}
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-3"
+        >
+          <img
             src="/images/logo.png"
             alt="Gaming Experience GMP"
-            width={50}
-            height={50}
+            className="h-10"
           />
 
-          <div>
-            <h1 className="text-white font-bold text-xl leading-5">
+          <div className="text-left">
+            <h1 className="font-bold text-lg">
               Gaming Experience
             </h1>
 
-            <span className="text-red-600 font-semibold text-sm">
+            <p className="text-red-600 text-sm font-bold">
               GMP
-            </span>
+            </p>
           </div>
+        </button>
+
+        {/* MENÚ */}
+        <div className="flex items-center gap-8 text-sm font-medium text-zinc-300">
+
+          <button
+            onClick={() => router.push("/")}
+            className="hover:text-red-500 transition"
+          >
+            Inicio
+          </button>
+
+          <button
+            onClick={() => router.push("/torneos")}
+            className="hover:text-red-500 transition"
+          >
+            Torneos
+          </button>
+
+          <button
+            onClick={() => router.push("/ranking")}
+            className="hover:text-red-500 transition"
+          >
+            Ranking
+          </button>
+
+          <button
+            onClick={() => router.push("/reglamento")}
+            className="hover:text-red-500 transition"
+          >
+            Reglamento
+          </button>
 
         </div>
 
-        {/* Menú */}
+        {/* DERECHA */}
+        {!user ? (
 
-        <nav className="hidden lg:flex items-center gap-10 text-white font-medium">
+          <button
+            onClick={() => router.push("/login")}
+            className="bg-red-600 hover:bg-red-700 transition px-6 py-3 rounded-xl font-bold"
+          >
+            Iniciar Sesión
+          </button>
 
-          <a href="#" className="hover:text-red-600 transition">
-            Inicio
-          </a>
+        ) : (
 
-          <a href="#" className="hover:text-red-600 transition">
-            Torneos
-          </a>
+          <div className="flex items-center gap-4">
 
-          <a href="#" className="hover:text-red-600 transition">
-            Ranking
-          </a>
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => router.push("/admin")}
+                  title="Panel de Administración"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-red-600 text-sm font-semibold transition"
+                >
+                  <FaUserShield className="text-red-500" />
+                  <span className="hidden lg:inline">Admin</span>
+                </button>
 
-          <a href="#" className="hover:text-red-600 transition">
-            Reglamento
-          </a>
+                <button
+                  onClick={() => router.push("/dashboard/resultados")}
+                  title="Dashboard de Resultados"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-red-600 text-sm font-semibold transition"
+                >
+                  <FaChartLine className="text-red-500" />
+                  <span className="hidden lg:inline">Dashboard</span>
+                </button>
+              </div>
+            )}
 
-        </nav>
+            <MessagesBell />
 
-        <button className="bg-red-600 hover:bg-red-700 transition px-6 py-3 rounded-xl font-bold text-white">
-          Iniciar sesión
-        </button>
+            <NotificationBell />
+
+            <div className="relative">
+
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-bold">
+                {user.email?.charAt(0).toUpperCase()}
+              </div>
+
+              <span className="font-medium">
+                {user.email?.split("@")[0]}
+              </span>
+            </button>
+
+            {menuOpen && (
+
+              <div className="absolute right-0 mt-3 w-60 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
+
+                <button
+                  onClick={() => {
+                    router.push("/perfil");
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-5 py-3 hover:bg-zinc-800 transition"
+                >
+                  👤 Mi Perfil
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-5 py-3 text-red-500 hover:bg-red-600 hover:text-white transition"
+                >
+                  🚪 Cerrar Sesión
+                </button>
+
+              </div>
+
+            )}
+
+            </div>
+
+          </div>
+
+        )}
 
       </div>
-    </header>
+    </nav>
   );
 }
+

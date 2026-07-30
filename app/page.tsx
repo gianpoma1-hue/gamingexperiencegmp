@@ -1,19 +1,29 @@
-import Navbar from "@/components/layout/Navbar";
+﻿import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/sections/Hero";
-import NextTournament from "@/components/sections/NextTournament";
-import Ranking from "@/components/sections/Ranking";
 import HowItWorks from "@/components/sections/HowItWorks";
-import Footer from "@/components/footer/footer";
+import WhyChooseUs from "@/components/sections/WhyChooseUs";
+import Footer from "@/components/footer/Footer";
+
+import BackgroundEffects from "@/components/background/BackgroundEffects";
 
 export default function Home() {
   return (
-    <>
+    <main className="relative min-h-screen overflow-x-hidden bg-[#050505] text-white">
+
+      {/* Fondo Global */}
+      <BackgroundEffects />
+
+      {/* Contenido */}
       <Navbar />
+
       <Hero />
-      <NextTournament />
-      <Ranking />
+
       <HowItWorks />
+
+      <WhyChooseUs />
+
       <Footer />
-    </>
+
+    </main>
   );
 }
