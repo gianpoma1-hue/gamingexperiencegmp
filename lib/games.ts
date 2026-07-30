@@ -69,5 +69,6 @@ export const juegos: Game[] = [
     imagen: "/images/games/cs2.jpg",
     disponible: false,
     ruta: "/torneos/proximamente",
+    modalidad: "individual",
   },
 ];
