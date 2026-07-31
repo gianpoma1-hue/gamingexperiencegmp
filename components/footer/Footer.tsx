@@ -3,8 +3,6 @@
 import { useRouter } from "next/navigation";
 import {
   FaInstagram,
-  FaDiscord,
-  FaTiktok,
 } from "react-icons/fa";
 
 export default function Footer() {
@@ -13,115 +11,115 @@ export default function Footer() {
   return (
     <footer className="bg-black border-t border-zinc-800 mt-24">
 
-      <div className="max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-4 gap-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-16">
 
-        {/* Logo */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-10">
 
-        <div>
+          {/* Logo */}
 
-          <h2 className="text-2xl font-black text-white">
-            Gaming Experience
-          </h2>
+          <div className="col-span-2 md:col-span-1">
 
-          <span className="text-red-600 font-bold">
-            GMP
-          </span>
+            <h2 className="text-xl lg:text-2xl font-black text-white">
+              Gaming Experience
+            </h2>
 
-          <p className="text-zinc-400 mt-5 leading-7">
-            La plataforma competitiva para
+            <span className="text-red-600 font-bold text-sm lg:text-base">
+              GMP
+            </span>
+
+            <p className="text-zinc-400 mt-3 lg:mt-5 text-sm lg:text-base leading-6 lg:leading-7">
+              La plataforma competitiva para
 jugadores de videojuegos.
 Competí contra los mejores y ganá
 premios reales.
-          </p>
-
-        </div>
-
-        {/* Plataforma */}
-
-        <div>
-
-          <h3 className="font-bold text-white mb-4">
-            Plataforma
-          </h3>
-
-          <div className="flex flex-col gap-3 text-zinc-400">
-
-            <button
-              onClick={() => router.push("/torneos")}
-              className="text-left hover:text-red-500 transition"
-            >
-              Torneos
-            </button>
-
-            <button
-              onClick={() => router.push("/ranking")}
-              className="text-left hover:text-red-500 transition"
-            >
-              Ranking
-            </button>
-
-
-            <button
-              onClick={() => router.push("/reglamento")}
-              className="text-left hover:text-red-500 transition"
-            >
-              Reglamento
-            </button>
+            </p>
 
           </div>
 
-        </div>
+          {/* Plataforma */}
 
-        {/* Ayuda */}
+          <div>
 
-        <div>
+            <h3 className="font-bold text-white mb-3 lg:mb-4 text-sm lg:text-base">
+              Plataforma
+            </h3>
 
-          <h3 className="font-bold text-white mb-4">
-            Ayuda
-          </h3>
+            <div className="flex flex-col gap-2 lg:gap-3 text-zinc-400 text-sm lg:text-base">
 
-          <div className="flex flex-col gap-3 text-zinc-400">
+              <button
+                onClick={() => router.push("/torneos")}
+                className="text-left hover:text-red-500 transition"
+              >
+                Torneos
+              </button>
 
-            <button
-              onClick={() => router.push("/faq")}
-              className="text-left hover:text-red-500 transition"
-            >
-              Preguntas Frecuentes
-            </button>
+              <button
+                onClick={() => router.push("/ranking")}
+                className="text-left hover:text-red-500 transition"
+              >
+                Ranking
+              </button>
 
-            <button
-              onClick={() => router.push("/contacto")}
-              className="text-left hover:text-red-500 transition"
-            >
-              Contacto
-            </button>
 
-            <button
-              onClick={() => router.push("/terminos")}
-              className="text-left hover:text-red-500 transition"
-            >
-              Términos y Condiciones
-            </button>
+              <button
+                onClick={() => router.push("/reglamento")}
+                className="text-left hover:text-red-500 transition"
+              >
+                Reglamento
+              </button>
+
+            </div>
 
           </div>
 
-        </div>
+          {/* Ayuda */}
 
-        {/* Redes */}
+          <div>
 
-        <div>
+            <h3 className="font-bold text-white mb-3 lg:mb-4 text-sm lg:text-base">
+              Ayuda
+            </h3>
 
-          <h3 className="font-bold text-white mb-4">
-            Seguinos
-          </h3>
+            <div className="flex flex-col gap-2 lg:gap-3 text-zinc-400 text-sm lg:text-base">
 
-          <div className="flex gap-5 text-3xl text-red-600">
+              <button
+                onClick={() => router.push("/faq")}
+                className="text-left hover:text-red-500 transition"
+              >
+                Preguntas Frecuentes
+              </button>
 
-            <a href="https://instagram.com/gmp_esports" target="_blank" rel="noopener noreferrer"><FaInstagram className="hover:scale-110 transition cursor-pointer" /></a>
+              <button
+                onClick={() => router.push("/contacto")}
+                className="text-left hover:text-red-500 transition"
+              >
+                Contacto
+              </button>
 
-            <FaDiscord className="hover:scale-110 transition cursor-pointer" />
+              <button
+                onClick={() => router.push("/terminos")}
+                className="text-left hover:text-red-500 transition"
+              >
+                Términos y Condiciones
+              </button>
 
-            <FaTiktok className="hover:scale-110 transition cursor-pointer" />
+            </div>
+
+          </div>
+
+          {/* Redes */}
+
+          <div>
+
+            <h3 className="font-bold text-white mb-3 lg:mb-4 text-sm lg:text-base">
+              Seguinos
+            </h3>
+
+            <div className="flex gap-4 lg:gap-5 text-2xl lg:text-3xl text-red-600">
+
+              <a href="https://www.instagram.com/gaminggmp/" target="_blank" rel="noopener noreferrer"><FaInstagram className="hover:scale-110 transition cursor-pointer" /></a>
+
+            </div>
 
           </div>
 
@@ -129,7 +127,7 @@ premios reales.
 
       </div>
 
-      <div className="border-t border-zinc-800 py-6 text-center text-zinc-500">
+      <div className="border-t border-zinc-800 py-4 lg:py-6 text-center text-zinc-500 text-xs sm:text-sm px-4">
 
         © 2026 Gaming Experience GMP · Todos los derechos reservados.
 

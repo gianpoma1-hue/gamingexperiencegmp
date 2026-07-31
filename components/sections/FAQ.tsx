@@ -76,7 +76,7 @@ export default function FAQ({ showHeader = true }: FAQProps) {
 
             <div
               key={index}
-              className="group overflow-hidden rounded-3xl border border-zinc-800 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:border-red-600 hover:shadow-[0_0_35px_rgba(220,38,38,.12)]"
+              className="group overflow-hidden rounded-3xl border border-zinc-800 bg-white/[0.03] lg:backdrop-blur-xl transition-all duration-500 hover:border-red-600 hover:shadow-[0_0_35px_rgba(220,38,38,.12)]"
             >
 
               <button

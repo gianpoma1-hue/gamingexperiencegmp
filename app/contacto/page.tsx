@@ -66,9 +66,14 @@ export default function ContactoPage() {
                 Seguinos para enterarte de nuevos torneos y novedades.
               </p>
 
-              <button className="w-full bg-pink-600 hover:bg-pink-700 rounded-xl py-3 font-bold transition">
+              <a
+                href="https://www.instagram.com/gaminggmp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center bg-pink-600 hover:bg-pink-700 rounded-xl py-3 font-bold transition"
+              >
                 Ir a Instagram
-              </button>
+              </a>
 
             </div>
 

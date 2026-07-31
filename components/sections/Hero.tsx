@@ -48,7 +48,7 @@ export default function Hero() {
 
         <div className="relative flex justify-center mt-2">
           <div
-            className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full blur-[100px] pointer-events-none z-0"
+            className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[380px] h-[380px] rounded-full blur-[70px] pointer-events-none z-0"
             style={{
               background:
                 "radial-gradient(circle, rgba(255,30,30,.45) 0%, rgba(255,30,30,.15) 45%, transparent 80%)",

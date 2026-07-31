@@ -86,6 +86,15 @@ export default function LoginPage() {
               className="w-full bg-black border border-zinc-700 rounded-xl p-3 outline-none focus:border-red-600"
             />
 
+            <div className="text-right mt-2">
+              <Link
+                href="/recuperar-password"
+                className="text-sm text-zinc-400 hover:text-red-500"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+
           </div>
 
           <button

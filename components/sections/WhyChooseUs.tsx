@@ -39,7 +39,7 @@ export default function WhyChooseUs() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
 
-        <div className="text-center mb-10 lg:mb-20">
+        <div className="text-center mb-8 lg:mb-20">
 
           <p className="uppercase tracking-[3px] sm:tracking-[6px] text-sm sm:text-base text-red-600 font-bold mb-5">
             Gaming Experience GMP
@@ -57,7 +57,7 @@ export default function WhyChooseUs() {
 
           </h2>
 
-          <p className="text-zinc-400 text-base sm:text-lg lg:text-xl mt-4 lg:mt-6 max-w-3xl mx-auto leading-8">
+          <p className="text-zinc-400 text-base sm:text-lg lg:text-xl mt-4 lg:mt-6 max-w-3xl mx-auto leading-7 lg:leading-8">
 
             Una plataforma creada para ofrecer torneos organizados,
             competencia de alto nivel y premios reales.
@@ -66,32 +66,32 @@ export default function WhyChooseUs() {
 
         </div>
 
-        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 lg:gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-8">
 
           {cards.map((card) => (
 
             <div
               key={card.title}
-              className="group relative overflow-hidden rounded-2xl lg:rounded-3xl border border-zinc-800 bg-white/[0.03] backdrop-blur-xl p-6 lg:p-8 transition-all duration-500 hover:-translate-y-3 hover:border-red-600 hover:shadow-[0_0_45px_rgba(220,38,38,.18)]"
+              className="group relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl border border-zinc-800 bg-white/[0.03] lg:backdrop-blur-xl p-3 sm:p-6 lg:p-8 transition-all duration-500 lg:hover:-translate-y-3 hover:border-red-600 lg:hover:shadow-[0_0_45px_rgba(220,38,38,.18)]"
             >
 
               {/* Glow */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-red-600/5 via-transparent to-blue-600/5" />
+              <div className="absolute inset-0 opacity-0 lg:group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-red-600/5 via-transparent to-blue-600/5" />
 
               {/* Icono */}
-              <div className="relative w-14 h-14 lg:w-20 lg:h-20 rounded-2xl border border-red-600/20 bg-red-600/10 flex items-center justify-center text-red-600 text-2xl lg:text-4xl mb-5 lg:mb-8 transition duration-500 group-hover:scale-110 group-hover:rotate-6">
+              <div className="relative w-9 h-9 sm:w-14 sm:h-14 lg:w-20 lg:h-20 rounded-xl lg:rounded-2xl border border-red-600/20 bg-red-600/10 flex items-center justify-center text-red-600 text-base sm:text-2xl lg:text-4xl mb-3 sm:mb-5 lg:mb-8 transition duration-500 lg:group-hover:scale-110 lg:group-hover:rotate-6">
 
                 {card.icon}
 
               </div>
 
-              <h3 className="relative text-3xl font-black mb-5">
+              <h3 className="relative text-base sm:text-xl lg:text-3xl font-black mb-1.5 sm:mb-3 lg:mb-5">
 
                 {card.title}
 
               </h3>
 
-              <p className="relative text-zinc-400 leading-8">
+              <p className="relative text-zinc-400 text-xs sm:text-sm lg:text-base leading-5 sm:leading-6 lg:leading-8">
 
                 {card.text}
 
