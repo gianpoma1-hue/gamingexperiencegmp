@@ -56,7 +56,7 @@ export default function EAFCTorneosPage() {
     <main className="min-h-screen bg-[#090909] text-white">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 pt-36 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 lg:pt-36 pb-16 lg:pb-20">
 
         <button
           onClick={() => router.push("/torneos")}
@@ -65,11 +65,11 @@ export default function EAFCTorneosPage() {
           ← Volver a Juegos
         </button>
 
-        <h1 className="text-5xl font-black">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black">
           EA SPORTS FC <span className="text-red-600">26</span>
         </h1>
 
-        <p className="text-zinc-400 mt-4 mb-12 text-lg">
+        <p className="text-zinc-400 mt-3 mb-8 lg:mt-4 lg:mb-12 text-base lg:text-lg">
           Elegí un torneo y comenzá a competir.
         </p>
 
@@ -82,7 +82,7 @@ export default function EAFCTorneosPage() {
             No hay torneos disponibles.
           </p>
         ) : (
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
             {torneos.map((torneo) => (
               <TorneoCard key={torneo.id} torneo={torneo} />
             ))}

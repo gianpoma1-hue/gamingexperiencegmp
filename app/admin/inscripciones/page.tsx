@@ -98,13 +98,13 @@ export default function AdminInscripcionesPage() {
 
         <AdminSidebar />
 
-        <div className="flex-1 p-10">
+        <div className="flex-1 p-5 pt-20 lg:p-10">
 
-          <h1 className="text-5xl font-black mb-2">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-2">
             Inscripciones
           </h1>
 
-          <p className="text-zinc-400 mb-10">
+          <p className="text-zinc-400 mb-6 lg:mb-10 text-sm sm:text-base">
             Jugadores inscriptos en los torneos.
           </p>
 
@@ -119,10 +119,10 @@ export default function AdminInscripcionesPage() {
 
                 <div
                   key={inscripcion.id}
-                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6"
                 >
 
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
 
                     <div>
 
@@ -171,7 +171,7 @@ export default function AdminInscripcionesPage() {
 
                     </div>
 
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row lg:flex-col flex-wrap gap-2 sm:gap-3">
                       {inscripcion.estado_pago !== "confirmado" && (
                         <button
                           onClick={() =>

@@ -16,7 +16,7 @@ export default function ContactoPage() {
 
       <Navbar />
 
-      <section className="pt-36 pb-20">
+      <section className="pt-24 lg:pt-36 pb-16 lg:pb-20">
 
         <div className="max-w-6xl mx-auto px-6">
 

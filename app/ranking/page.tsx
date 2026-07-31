@@ -123,16 +123,16 @@ export default function RankingPage() {
     <main className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <section className="pt-36 pb-24">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="pt-24 lg:pt-36 pb-16 lg:pb-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
           <div className="text-center">
 
-            <h1 className="text-6xl font-black">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-black">
               Ranking <span className="text-red-600">Mensual</span>
             </h1>
 
-            <p className="text-zinc-400 text-xl mt-6 max-w-3xl mx-auto leading-8">
+            <p className="text-zinc-400 text-base sm:text-lg lg:text-xl mt-4 lg:mt-6 max-w-3xl mx-auto leading-6 lg:leading-8">
               Competí durante todo el mes, escalá posiciones y conseguí los
               mejores premios de Gaming Experience GMP.
             </p>
@@ -140,10 +140,10 @@ export default function RankingPage() {
           </div>
 
           {/* TABS INDIVIDUAL / EQUIPOS */}
-          <div className="mt-10 flex justify-center gap-3">
+          <div className="mt-6 lg:mt-10 flex flex-wrap justify-center gap-2 sm:gap-3">
             <button
               onClick={() => cambiarModo("individual")}
-              className={`rounded-full border px-6 py-3 font-bold text-sm transition ${
+              className={`rounded-full border px-4 sm:px-6 py-2 sm:py-3 font-bold text-xs sm:text-sm transition ${
                 modo === "individual"
                   ? "border-red-600 bg-red-600/10 text-white"
                   : "border-zinc-800 bg-[#111111] text-zinc-400 hover:border-zinc-600 hover:text-white"
@@ -154,7 +154,7 @@ export default function RankingPage() {
 
             <button
               onClick={() => cambiarModo("equipo")}
-              className={`rounded-full border px-6 py-3 font-bold text-sm transition ${
+              className={`rounded-full border px-4 sm:px-6 py-2 sm:py-3 font-bold text-xs sm:text-sm transition ${
                 modo === "equipo"
                   ? "border-red-600 bg-red-600/10 text-white"
                   : "border-zinc-800 bg-[#111111] text-zinc-400 hover:border-zinc-600 hover:text-white"

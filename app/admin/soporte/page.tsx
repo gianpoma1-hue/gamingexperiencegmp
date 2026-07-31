@@ -105,7 +105,7 @@ export default function AdminSoportePage() {
       <div className="flex pt-20">
         <AdminSidebar />
 
-        <div className="flex-1 p-10">
+        <div className="flex-1 p-5 pt-20 lg:p-10">
           <h1 className="text-5xl font-black mb-2">Soporte</h1>
 
           <p className="text-zinc-400 mb-10">

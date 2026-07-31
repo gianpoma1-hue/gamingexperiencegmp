@@ -209,8 +209,75 @@ export default function Bracket({
     };
   }, [partidos, totalRondas]);
 
+  const rondasOrdenVertical = [...numerosRonda].sort((a, b) => a - b);
+
   return (
-    <div className="w-full overflow-x-auto">
+    <>
+      {/* ============ MOBILE: rondas apiladas, sin scroll horizontal ============ */}
+      <div className="lg:hidden space-y-10">
+        {rondasOrdenVertical.map((r) => (
+          <div key={`mobile-ronda-${r}`}>
+            <h3 className="text-center text-red-500 font-extrabold uppercase tracking-[0.2em] text-sm mb-4">
+              {obtenerNombreRonda(r)}
+            </h3>
+
+            <div className="space-y-4">
+              {(rondas[r] ?? []).map((partido) => (
+                <MatchCard
+                  key={partido.id}
+                  id={partido.id}
+                  torneoId={torneoId}
+                  jugador1={partido.jugador1 ?? ""}
+                  jugador2={partido.jugador2 ?? ""}
+                  capitan1={partido.capitan1 ?? null}
+                  capitan2={partido.capitan2 ?? null}
+                  golesJugador1={partido.goles_jugador1}
+                  golesJugador2={partido.goles_jugador2}
+                  penalesJugador1={partido.penales_jugador1}
+                  penalesJugador2={partido.penales_jugador2}
+                  ganador={partido.ganador ?? null}
+                  miUsuario={miUsuario}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <div className="flex flex-col items-center w-full rounded-2xl border border-red-600/60 bg-gradient-to-b from-red-950/40 to-zinc-950 px-6 py-8">
+          <div className="rounded-2xl border-2 border-red-600 p-4 mb-4">
+            <Trophy className="text-red-500" size={34} />
+          </div>
+
+          <p className="text-zinc-400 text-xs font-bold tracking-widest">
+            CAMPEÓN
+          </p>
+
+          <p className="text-xl font-black mt-1 text-center border-b-2 border-red-600 pb-2 w-full">
+            {finalTerminada ? campeon : "Por definir"}
+          </p>
+
+          <p className="text-zinc-500 text-xs font-bold tracking-widest mt-4">
+            SUBCAMPEÓN
+          </p>
+
+          <p className="text-base font-bold mt-1 text-center text-zinc-300">
+            {finalTerminada ? subcampeon : "Por definir"}
+          </p>
+
+          {mostrarReclamar && (
+            <button
+              onClick={onReclamarPremio}
+              className="mt-5 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-3 flex items-center justify-center gap-2 transition"
+            >
+              <Trophy size={16} />
+              Reclamar mi premio
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ============ DESKTOP: llave completa con líneas conectoras (sin cambios) ============ */}
+      <div className="hidden lg:block w-full overflow-x-auto">
       <div
         ref={contenidoRef}
         className="relative flex items-center justify-center gap-14 w-max min-w-full py-8 mx-auto"
@@ -342,6 +409,7 @@ export default function Bracket({
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

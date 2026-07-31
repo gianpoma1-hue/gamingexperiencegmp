@@ -9,7 +9,7 @@ export default function TerminosPage() {
 
       <Navbar />
 
-      <section className="pt-36 pb-24">
+      <section className="pt-24 lg:pt-36 pb-16 lg:pb-24">
 
         <div className="max-w-5xl mx-auto px-6">
 

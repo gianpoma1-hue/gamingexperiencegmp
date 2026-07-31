@@ -183,7 +183,7 @@ export default function InscripcionPage() {
     <main className="min-h-screen bg-[#090909] text-white">
       <Navbar />
 
-      <div className="max-w-xl mx-auto pt-36 pb-20 px-6">
+      <div className="max-w-xl mx-auto pt-24 lg:pt-36 pb-16 lg:pb-20 px-4 sm:px-6">
 
         <h1 className="text-4xl font-black mb-2">
           Inscripción

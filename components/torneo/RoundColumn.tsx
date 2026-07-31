@@ -26,6 +26,14 @@ type Props = {
   ronda: number;
   miUsuario?: string | null;
   torneoId: string;
+  // Desde qué número de seed arranca esta columna en la ronda 1 (para
+  // que la numeración de jugadores siga de corrido entre ambas mitades
+  // de la llave en vez de reiniciar en 1 de los dos lados).
+  seedInicial?: number;
+  // true cuando esta columna está del lado que viene reflejado
+  // (scaleX(-1)) desde el componente padre, para des-reflejar el
+  // contenido de cada tarjeta y que el texto se lea normal.
+  espejado?: boolean;
   registrarRef?: (
     numeroPartido: number,
     el: HTMLDivElement | null
@@ -38,6 +46,8 @@ export default function RoundColumn({
   ronda,
   miUsuario,
   torneoId,
+  seedInicial = 1,
+  espejado = false,
   registrarRef,
 }: Props) {
   // Centrado vertical de cada ronda
@@ -70,12 +80,13 @@ export default function RoundColumn({
           <div
             key={partido.id}
             ref={(el) => registrarRef?.(index + 1, el)}
+            style={espejado ? { transform: "scaleX(-1)" } : undefined}
           >
             <MatchCard
               id={partido.id}
               torneoId={torneoId}
-              seed1={ronda === 1 ? index * 2 + 1 : undefined}
-              seed2={ronda === 1 ? index * 2 + 2 : undefined}
+              seed1={ronda === 1 ? seedInicial + index * 2 : undefined}
+              seed2={ronda === 1 ? seedInicial + index * 2 + 1 : undefined}
               jugador1={partido.jugador1 ?? ""}
               jugador2={partido.jugador2 ?? ""}
               capitan1={partido.capitan1 ?? null}

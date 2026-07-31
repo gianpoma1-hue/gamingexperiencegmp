@@ -82,7 +82,7 @@ export default function AdminUsuariosPage() {
       <div className="flex min-h-screen bg-black text-white pt-20">
         <AdminSidebar />
 
-        <main className="flex-1 p-10">
+        <main className="flex-1 p-5 pt-20 lg:p-10">
 
           <h1 className="text-4xl font-black">Usuarios</h1>
           <p className="text-zinc-400 mt-2">

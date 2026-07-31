@@ -26,12 +26,12 @@ export default function SimpleRankingList({ players }: Props) {
 
           <thead className="bg-zinc-800">
             <tr className="text-left">
-              <th className="p-5">#</th>
-              <th className="p-5">Jugador</th>
-              <th className="p-5 text-center">PJ</th>
-              <th className="p-5 text-center">Ganadas</th>
-              <th className="p-5 text-center">Perdidas</th>
-              <th className="p-5 text-center">🏆</th>
+              <th className="p-2 sm:p-3 lg:p-5 text-xs sm:text-sm lg:text-base whitespace-nowrap">#</th>
+              <th className="p-2 sm:p-3 lg:p-5 text-xs sm:text-sm lg:text-base whitespace-nowrap">Jugador</th>
+              <th className="p-2 sm:p-3 lg:p-5 text-center text-xs sm:text-sm lg:text-base whitespace-nowrap">PJ</th>
+              <th className="p-2 sm:p-3 lg:p-5 text-center text-xs sm:text-sm lg:text-base whitespace-nowrap">Ganadas</th>
+              <th className="p-2 sm:p-3 lg:p-5 text-center text-xs sm:text-sm lg:text-base whitespace-nowrap">Perdidas</th>
+              <th className="p-2 sm:p-3 lg:p-5 text-center text-xs sm:text-sm lg:text-base whitespace-nowrap">🏆</th>
             </tr>
           </thead>
 
@@ -41,7 +41,7 @@ export default function SimpleRankingList({ players }: Props) {
                 key={jugador.usuario}
                 className="border-t border-zinc-800 hover:bg-zinc-800 transition"
               >
-                <td className="p-5 font-black text-red-500">
+                <td className="p-2 sm:p-3 lg:p-5 font-black text-red-500 text-xs sm:text-sm lg:text-base whitespace-nowrap">
                   {index === 0
                     ? "🥇"
                     : index === 1
@@ -51,23 +51,23 @@ export default function SimpleRankingList({ players }: Props) {
                     : `#${index + 1}`}
                 </td>
 
-                <td className="p-5 font-bold">
+                <td className="p-2 sm:p-3 lg:p-5 font-bold text-xs sm:text-sm lg:text-base whitespace-nowrap">
                   {jugador.usuario}
                 </td>
 
-                <td className="p-5 text-center">
+                <td className="p-2 sm:p-3 lg:p-5 text-center text-xs sm:text-sm lg:text-base whitespace-nowrap">
                   {jugador.partidos_jugados}
                 </td>
 
-                <td className="p-5 text-center text-green-400">
+                <td className="p-2 sm:p-3 lg:p-5 text-center text-green-400 text-xs sm:text-sm lg:text-base whitespace-nowrap">
                   {jugador.victorias}
                 </td>
 
-                <td className="p-5 text-center text-red-400">
+                <td className="p-2 sm:p-3 lg:p-5 text-center text-red-400 text-xs sm:text-sm lg:text-base whitespace-nowrap">
                   {jugador.derrotas}
                 </td>
 
-                <td className="p-5 text-center text-yellow-400 font-bold">
+                <td className="p-2 sm:p-3 lg:p-5 text-center text-yellow-400 font-bold text-xs sm:text-sm lg:text-base whitespace-nowrap">
                   {jugador.torneos_ganados}
                 </td>
               </tr>

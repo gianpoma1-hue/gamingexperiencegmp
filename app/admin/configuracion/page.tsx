@@ -83,7 +83,7 @@ export default function AdminConfiguracionPage() {
       <div className="flex min-h-screen bg-black text-white pt-20">
         <AdminSidebar />
 
-        <main className="flex-1 p-10 max-w-3xl">
+        <main className="flex-1 p-5 pt-20 lg:p-10 max-w-3xl">
 
           <h1 className="text-4xl font-black">Configuración</h1>
           <p className="text-zinc-400 mt-2">

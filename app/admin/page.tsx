@@ -199,17 +199,17 @@ while (partidosRonda > 1) {
 
         <AdminSidebar />
 
-        <div className="flex-1 p-10">
+        <div className="flex-1 p-5 pt-20 lg:p-10">
 
-          <div className="flex justify-between items-center mb-10">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 lg:mb-10">
 
             <div>
 
-              <h1 className="text-5xl font-black">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black">
                 Torneos
               </h1>
 
-              <p className="text-zinc-400 mt-2">
+              <p className="text-zinc-400 mt-2 text-sm sm:text-base">
                 Administrá todos los torneos.
               </p>
 
@@ -217,7 +217,7 @@ while (partidosRonda > 1) {
 
             <button
               onClick={() => router.push("/admin/torneos/nuevo")}
-              className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl font-bold"
+              className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl font-bold text-sm sm:text-base"
             >
               + Crear Torneo
             </button>
@@ -236,38 +236,38 @@ while (partidosRonda > 1) {
 
                 <div
                   key={torneo.id}
-                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6"
                 >
 
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
 
                     <div>
 
-                      <h2 className="text-3xl font-bold">
+                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold">
                         {torneo.nombre}
                       </h2>
 
-                      <p className="text-zinc-400">
+                      <p className="text-zinc-400 text-sm sm:text-base">
                         {torneo.juego}
                       </p>
 
-                      <p className="mt-2">
+                      <p className="mt-2 text-sm sm:text-base">
                         Plataforma: {torneo.plataforma}
                       </p>
 
-                      <p>
+                      <p className="text-sm sm:text-base">
                         Premio: ${torneo.premio}
                       </p>
 
-                      <p>
+                      <p className="text-sm sm:text-base">
                         Inscripción: ${torneo.inscripcion}
                       </p>
 
-                      <p>
+                      <p className="text-sm sm:text-base">
                         Fecha: {torneo.fecha}
                       </p>
 
-                      <p className="mt-3">
+                      <p className="mt-3 text-sm sm:text-base">
                         Estado:
                         <span className="text-red-500 font-bold ml-2">
                           {torneo.estado}
@@ -276,19 +276,19 @@ while (partidosRonda > 1) {
 
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
 
                       <button
                         onClick={() =>
                           router.push(`/admin/torneos/editar/${torneo.id}`)
                         }
-                        className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg"
+                        className="bg-blue-600 hover:bg-blue-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base"
                       >
                         Editar
                       </button>
 
                       <button
-                        className="bg-yellow-600 hover:bg-yellow-700 px-5 py-2 rounded-lg"
+                        className="bg-yellow-600 hover:bg-yellow-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base"
                       >
                         Cerrar
                       </button>
@@ -297,7 +297,7 @@ while (partidosRonda > 1) {
 
   <button
     onClick={() => router.push(`/torneos/llave/${torneo.id}`)}
-    className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg font-semibold"
+    className="bg-blue-600 hover:bg-blue-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base font-semibold"
   >
     🏆 Llave del Torneo
   </button>
@@ -306,7 +306,7 @@ while (partidosRonda > 1) {
 
   <button
     onClick={() => empezarTorneo(torneo.id)}
-    className="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-lg font-semibold"
+    className="bg-green-600 hover:bg-green-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base font-semibold"
   >
     Empezar
   </button>
@@ -315,7 +315,7 @@ while (partidosRonda > 1) {
 
                       <button
                         onClick={() => eliminarTorneo(torneo.id)}
-                        className="bg-red-700 hover:bg-red-800 px-5 py-2 rounded-lg"
+                        className="bg-red-700 hover:bg-red-800 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base"
                       >
                         Eliminar
                       </button>

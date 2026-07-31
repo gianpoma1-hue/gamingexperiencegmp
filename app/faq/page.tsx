@@ -10,7 +10,7 @@ export default function FAQPage() {
 
       <Navbar />
 
-      <section className="pt-36 pb-10">
+      <section className="pt-24 lg:pt-36 pb-10">
 
         <div className="max-w-5xl mx-auto px-6 text-center">
 

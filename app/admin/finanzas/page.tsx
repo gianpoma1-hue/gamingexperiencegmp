@@ -209,7 +209,7 @@ export default function AdminFinanzasPage() {
       <div className="flex min-h-screen bg-black text-white pt-20">
         <AdminSidebar />
 
-        <main className="flex-1 p-10">
+        <main className="flex-1 p-5 pt-20 lg:p-10">
 
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>

@@ -169,7 +169,7 @@ export default function LlaveTorneoPage() {
     <main className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 pt-28 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 lg:pt-28 pb-16">
 
         <button
           onClick={() => router.push(rutaVolver)}
@@ -188,7 +188,7 @@ export default function LlaveTorneoPage() {
         </p>
 
         {miUsuario && partidos.length > 0 && (esTrucoBlyts || esFC26) && (
-          <div className="mt-8 rounded-2xl border-2 border-yellow-500/60 bg-yellow-500/5 px-8 py-6">
+          <div className="mt-8 rounded-2xl border-2 border-yellow-500/60 bg-yellow-500/5 px-4 sm:px-8 py-6">
             <div className="flex items-center gap-3 mb-4">
               <AlertTriangle className="text-yellow-500 shrink-0" size={24} />
               <h2 className="text-xl font-black tracking-wide text-yellow-500">
@@ -357,7 +357,7 @@ export default function LlaveTorneoPage() {
         )}
 
         {/* INFO BAR */}
-        <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-8 py-6 flex flex-wrap gap-y-6 gap-x-10">
+        <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 sm:px-8 py-6 flex flex-wrap gap-y-6 gap-x-10">
 
           <div className="flex items-center gap-3">
             <Gamepad2 className="text-zinc-500" size={22} />

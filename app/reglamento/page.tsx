@@ -10,7 +10,7 @@ export default function ReglamentoPage() {
     <main className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <section className="pt-36 pb-16">
+      <section className="pt-24 lg:pt-36 pb-12 lg:pb-16">
         <div className="max-w-5xl mx-auto px-6">
           <h1 className="text-6xl font-black text-center">
             Reglamento <span className="text-red-600">General</span>
