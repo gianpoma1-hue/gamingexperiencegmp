@@ -12,7 +12,7 @@ export default function GameSelector({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap justify-center gap-3">
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
       {games.map((game) => {
         const isSelected = game.id === selectedId;
 
@@ -20,7 +20,7 @@ export default function GameSelector({
           <button
             key={game.id}
             onClick={() => onSelect(game.id)}
-            className={`relative flex items-center gap-2 rounded-full border px-6 py-3 font-semibold text-sm transition-all duration-300 ${
+            className={`relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-full border px-2 py-2.5 sm:px-6 sm:py-3 font-semibold text-xs sm:text-sm text-center transition-all duration-300 ${
               isSelected
                 ? "border-red-600 bg-red-600/10 text-white"
                 : "border-zinc-800 bg-[#111111] text-zinc-400 hover:border-zinc-600 hover:text-white"
@@ -28,7 +28,7 @@ export default function GameSelector({
           >
             {game.nombre}
             {!game.disponible && (
-              <span className="rounded-full bg-yellow-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-400">
+              <span className="rounded-full bg-yellow-400/10 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-yellow-400">
                 Próximamente
               </span>
             )}
