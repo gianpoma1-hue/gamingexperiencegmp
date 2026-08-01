@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRouter } from "next/navigation";
 import { Swords } from "lucide-react";
@@ -7,6 +7,7 @@ export type TorneoCardData = {
   id: string;
   nombre: string;
   juego: string;
+  descripcion?: string | null;
   jugadores_max: number;
   premio: number;
   premio_segundo?: number | null;
@@ -29,6 +30,12 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
       <h2 className="text-xl lg:text-3xl font-black">{torneo.nombre}</h2>
 
       <p className="text-zinc-400 mt-2 text-sm lg:text-base">{torneo.juego}</p>
+
+      {torneo.descripcion && (
+        <p className="text-zinc-400 mt-3 text-sm lg:text-base leading-6">
+          {torneo.descripcion}
+        </p>
+      )}
 
       {/* Premios */}
       <div
@@ -88,7 +95,7 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
               Hora de comienzo
             </p>
             <h3 className="text-sm sm:text-lg font-bold">
-              {torneo.hora}
+              {torneo.hora.slice(0, 5)}
             </h3>
           </div>
         )}
@@ -98,7 +105,7 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
       {torneo.estado === "En curso" ? (
         <button
           onClick={() => router.push(`/torneos/llave/${torneo.id}`)}
-          className="mt-6 lg:mt-8 w-full bg-blue-600 hover:bg-blue-700 rounded-xl py-3 lg:py-4 font-bold text-base lg:text-lg transition"
+          className="mt-6 lg:mt-8 w-full bg-blue-600 hover:bg-blue-700 rounded-xl py-3lg:py-4 font-bold text-base lg:text-lg transition"
         >
           🏆 VER LLAVE DEL TORNEO
         </button>
