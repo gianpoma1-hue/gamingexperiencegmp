@@ -47,7 +47,7 @@ export default function AdminInscripcionesPage() {
       console.error(error);
       alert("Error al cargar las inscripciones.");
     } else {
-      setInscripciones((data as Inscripcion[]) || []);
+      setInscripciones((data as unknown as Inscripcion[]) || []);
     }
 
     setLoading(false);
