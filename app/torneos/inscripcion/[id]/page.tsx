@@ -251,11 +251,6 @@ export default function InscripcionPage() {
                 <p className="font-bold text-lg">{perfil?.usuario}</p>
               </div>
 
-              <div>
-                <p className="text-zinc-400 text-sm">Plataforma</p>
-                <p className="font-bold text-lg">{perfil?.plataforma}</p>
-              </div>
-
               {torneo?.modalidad === "equipo" && (
                 <div>
                   <p className="text-zinc-400 text-sm">Nombre del equipo</p>
