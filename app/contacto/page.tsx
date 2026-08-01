@@ -48,9 +48,14 @@ export default function ContactoPage() {
                 Atención rápida para consultas sobre torneos e inscripciones.
               </p>
 
-              <button className="w-full bg-green-600 hover:bg-green-700 rounded-xl py-3 font-bold transition">
+              <a
+                href="https://chat.whatsapp.com/ChY0liNPMEYDDov655CDJI"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center bg-green-600 hover:bg-green-700 rounded-xl py-3 font-bold transition"
+              >
                 Escribinos
-              </button>
+              </a>
 
             </div>
 

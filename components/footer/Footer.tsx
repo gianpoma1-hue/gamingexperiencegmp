@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import {
   FaInstagram,
+  FaWhatsapp,
 } from "react-icons/fa";
 
 export default function Footer() {
@@ -112,14 +113,21 @@ premios reales.
           <div>
 
             <h3 className="font-bold text-white mb-3 lg:mb-4 text-sm lg:text-base">
-              Seguinos
+              Seguinos y unite a nuestra comunidad
             </h3>
 
             <div className="flex gap-4 lg:gap-5 text-2xl lg:text-3xl text-red-600">
 
               <a href="https://www.instagram.com/gaminggmp/" target="_blank" rel="noopener noreferrer"><FaInstagram className="hover:scale-110 transition cursor-pointer" /></a>
 
+              <a href="https://chat.whatsapp.com/ChY0liNPMEYDDov655CDJI" target="_blank" rel="noopener noreferrer"><FaWhatsapp className="hover:scale-110 transition cursor-pointer" /></a>
+
             </div>
+
+            <p className="text-zinc-400 mt-3 text-xs lg:text-sm leading-6">
+              Seguinos en instagram y sumate anuestra comunidad de WhatsApp: ahí avisamos todos los
+              torneos, inscripciones abiertas y novedades.
+            </p>
 
           </div>
 

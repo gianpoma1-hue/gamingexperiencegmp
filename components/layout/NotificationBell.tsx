@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,7 @@ export default function NotificationBell() {
   const [miUsuario, setMiUsuario] = useState<string | null>(null);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [abierto, setAbierto] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -100,6 +101,32 @@ export default function NotificationBell() {
     );
   }
 
+  async function eliminarTodas() {
+    if (notificaciones.length === 0 || !miUsuario) return;
+
+    const confirmar = confirm(
+      "¿Eliminar todas las notificaciones? Esta acción no se puede deshacer."
+    );
+
+    if (!confirmar) return;
+
+    setEliminando(true);
+
+    const { error } = await supabase
+      .from("notificaciones")
+      .delete()
+      .eq("usuario", miUsuario);
+
+    setEliminando(false);
+
+    if (error) {
+      alert("No se pudieron eliminar: " + error.message);
+      return;
+    }
+
+    setNotificaciones([]);
+  }
+
   if (!miUsuario) return null;
 
   const noLeidas = notificaciones.filter((n) => !n.leida).length;
@@ -122,17 +149,29 @@ export default function NotificationBell() {
       {abierto && (
         <div className="absolute right-0 mt-3 w-80 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl z-50">
 
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
-            <span className="font-bold text-sm">Notificaciones</span>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 gap-3">
+            <span className="font-bold text-sm shrink-0">Notificaciones</span>
 
-            {noLeidas > 0 && (
-              <button
-                onClick={marcarTodasComoLeidas}
-                className="text-xs text-red-400 hover:text-red-300"
-              >
-                Marcar todas como leídas
-              </button>
-            )}
+            <div className="flex items-center gap-3 text-xs">
+              {noLeidas > 0 && (
+                <button
+                  onClick={marcarTodasComoLeidas}
+                  className="text-red-400 hover:text-red-300 whitespace-nowrap"
+                >
+                  Marcar leídas
+                </button>
+              )}
+
+              {notificaciones.length > 0 && (
+                <button
+                  onClick={eliminarTodas}
+                  disabled={eliminando}
+                  className="text-zinc-400 hover:text-red-400 disabled:opacity-50 whitespace-nowrap"
+                >
+                  {eliminando ? "Eliminando..." : "Eliminar todas"}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
