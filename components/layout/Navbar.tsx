@@ -1,8 +1,9 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 import NotificationBell from "./NotificationBell";
 import MessagesBell from "./MessagesBell";
 import { FaUserShield, FaChartLine } from "react-icons/fa";
@@ -14,6 +15,28 @@ export default function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [miUsuario, setMiUsuario] = useState<string | null>(null);
+  const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setMiUsuario(null);
+      setFotoPerfil(null);
+      return;
+    }
+
+    supabase
+      .from("usuarios")
+      .select("usuario, foto_perfil")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        setMiUsuario(data?.usuario ?? null);
+        setFotoPerfil(data?.foto_perfil ?? null);
+      });
+  }, [user]);
+
+  const nombreMostrado = miUsuario ?? user?.email?.split("@")[0] ?? "";
 
   const handleLogout = async () => {
     await logout();
@@ -120,12 +143,20 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-bold">
-                  {user.email?.charAt(0).toUpperCase()}
+                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-bold overflow-hidden shrink-0">
+                  {fotoPerfil ? (
+                    <img
+                      src={fotoPerfil}
+                      alt={nombreMostrado}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    nombreMostrado.charAt(0).toUpperCase()
+                  )}
                 </div>
 
                 <span className="font-medium">
-                  {user.email?.split("@")[0]}
+                  {nombreMostrado}
                 </span>
               </button>
 
@@ -249,7 +280,7 @@ export default function Navbar() {
                 onClick={() => ir("/perfil")}
                 className="block w-full text-left px-3 py-3 rounded-lg hover:bg-zinc-900 font-medium"
               >
-                👤 Mi Perfil ({user.email?.split("@")[0]})
+                👤 Mi Perfil ({nombreMostrado})
               </button>
 
               <button

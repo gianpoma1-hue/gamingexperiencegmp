@@ -304,6 +304,9 @@ export default function PerfilPage() {
                   </div>
 
                   <div className="pb-1">
+                    <p className="text-zinc-500 text-[11px] sm:text-xs uppercase tracking-wide font-semibold mb-0.5">
+                      Nombre de usuario
+                    </p>
                     <h1 className="text-xl sm:text-3xl lg:text-4xl font-black">
                       {user.usuario}
                     </h1>
@@ -311,12 +314,6 @@ export default function PerfilPage() {
                       {user.nombre}
                     </p>
                   </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 sm:gap-3 pb-1">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-black/40 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-zinc-300">
-                    🖥️ {user.plataforma}
-                  </span>
                 </div>
 
               </div>

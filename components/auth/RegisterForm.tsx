@@ -10,7 +10,6 @@ export default function RegisterForm() {
 
   const [nombre, setNombre] = useState("");
   const [usuario, setUsuario] = useState("");
-  const [plataforma, setPlataforma] = useState("");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +28,6 @@ export default function RegisterForm() {
     if (
       !nombre ||
       !usuario ||
-      !plataforma ||
       !email ||
       !password
     ) {
@@ -48,6 +46,18 @@ export default function RegisterForm() {
     }
 
     setLoading(true);
+
+    const { data: existente } = await supabase
+      .from("usuarios")
+      .select("id")
+      .ilike("usuario", usuario)
+      .maybeSingle();
+
+    if (existente) {
+      setLoading(false);
+      setError("Ese nombre de usuario ya existe. Elegí otro.");
+      return;
+    }
 
     const { data, error: authError } =
       await supabase.auth.signUp({
@@ -68,13 +78,24 @@ export default function RegisterForm() {
           id: data.user.id,
           nombre,
           usuario,
-          plataforma,
           email,
         });
 
       if (profileError) {
         setLoading(false);
-        setError(profileError.message);
+
+        if (profileError.code === "23505") {
+          if (profileError.message.includes("usuario")) {
+            setError(
+              "Ese nombre de usuario ya existe. Elegí otro."
+            );
+          } else {
+            setError("Ya existe una cuenta con esos datos.");
+          }
+        } else {
+          setError(profileError.message);
+        }
+
         return;
       }
     }
@@ -124,17 +145,6 @@ export default function RegisterForm() {
           onChange={(e) => setUsuario(e.target.value)}
           className="w-full rounded-xl bg-black border border-zinc-700 p-3"
         />
-
-        <select
-          value={plataforma}
-          onChange={(e) => setPlataforma(e.target.value)}
-          className="w-full rounded-xl bg-black border border-zinc-700 p-3"
-        >
-          <option value="">Seleccionar plataforma</option>
-          <option>PC</option>
-          <option>PlayStation 5</option>
-          <option>Xbox Series X/S</option>
-        </select>
 
         <input
           type="email"
