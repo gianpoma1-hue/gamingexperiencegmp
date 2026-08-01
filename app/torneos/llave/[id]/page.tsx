@@ -12,7 +12,6 @@ import {
   Wifi,
   HelpCircle,
   AlertTriangle,
-  Medal,
 } from "lucide-react";
 
 import Navbar from "@/components/layout/Navbar";
@@ -30,7 +29,6 @@ interface Torneo {
   modalidad: "individual" | "equipo";
   jugadores_max: number;
   premio: number;
-  premio_segundo: number;
   fecha: string;
   estado: string;
   campeon: string | null;
@@ -66,6 +64,7 @@ function formatearFecha(fecha?: string) {
       day: "2-digit",
       month: "short",
       year: "numeric",
+      timeZone: "UTC",
     })
     .replace(".", "")
     .toUpperCase();
@@ -106,8 +105,7 @@ export default function LlaveTorneoPage() {
     const { count } = await supabase
       .from("inscripciones")
       .select("*", { count: "exact", head: true })
-      .eq("torneo_id", id)
-      .neq("estado_pago", "rechazado");
+      .eq("torneo_id", id);
 
     const { data: partidosData } = await supabase
       .from("partidos")
@@ -168,18 +166,11 @@ export default function LlaveTorneoPage() {
   const esTrucoBlyts = torneo?.juego === "Truco Blyts";
   const esFC26 = torneo?.juego === "EA SPORTS FC 26";
 
-  const subcampeon =
-    finalTerminada && partidoFinal
-      ? partidoFinal.ganador === partidoFinal.jugador1
-        ? partidoFinal.jugador2
-        : partidoFinal.jugador1
-      : null;
-
   return (
     <main className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 pt-28 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 lg:pt-28 pb-16">
 
         <button
           onClick={() => router.push(rutaVolver)}
@@ -198,7 +189,7 @@ export default function LlaveTorneoPage() {
         </p>
 
         {miUsuario && partidos.length > 0 && (esTrucoBlyts || esFC26) && (
-          <div className="mt-8 rounded-2xl border-2 border-yellow-500/60 bg-yellow-500/5 px-8 py-6">
+          <div className="mt-8 rounded-2xl border-2 border-yellow-500/60 bg-yellow-500/5 px-4 sm:px-8 py-6">
             <div className="flex items-center gap-3 mb-4">
               <AlertTriangle className="text-yellow-500 shrink-0" size={24} />
               <h2 className="text-xl font-black tracking-wide text-yellow-500">
@@ -258,6 +249,25 @@ export default function LlaveTorneoPage() {
                     organización y coordinar la entrega del premio.
                   </span>
                 </li>
+
+                <li className="flex gap-3">
+                  <span className="text-yellow-500 font-bold">5.</span>
+                  <span>
+                    Si a alguno de los jugadores se le corta la conexión
+                    durante la partida, esta debe continuar respetando el
+                    marcador en el que quedó al momento del corte (se
+                    recomienda sacar una captura de pantalla de ese
+                    marcador como respaldo). Al finalizar, ambos jugadores
+                    deben reportar el resultado adjuntando sus capturas
+                    correspondientes. Si el rival abandona la partida y
+                    pasan más de{" "}
+                    <span className="font-semibold text-white">
+                      5 minutos
+                    </span>{" "}
+                    sin que se reconecte, el jugador que permaneció en la
+                    partida será declarado ganador.
+                  </span>
+                </li>
               </ul>
             )}
 
@@ -278,19 +288,6 @@ export default function LlaveTorneoPage() {
                         </span>{" "}
                         con tu rival para coordinar el horario e
                         intercambiar el ID de EA SPORTS FC 26.
-                      </span>
-                    </li>
-
-                    <li className="flex gap-3">
-                      <span>⏳</span>
-                      <span>
-                        Al iniciar cada ronda, ambos jugadores dispondrán de{" "}
-                        <span className="font-semibold text-white">
-                          15 minutos
-                        </span>{" "}
-                        para contactar a su rival y jugar. Quien no
-                        responda o no se presente dentro de ese plazo
-                        perderá el encuentro.
                       </span>
                     </li>
 
@@ -332,19 +329,6 @@ export default function LlaveTorneoPage() {
                         de penales.
                       </span>
                     </li>
-
-                    <li className="flex gap-3">
-                      <span>🔌</span>
-                      <span>
-                        Si un jugador se desconecta durante el partido,
-                        independientemente del motivo (intencional o
-                        accidental), el encuentro se dará por{" "}
-                        <span className="font-semibold text-white">
-                          perdido
-                        </span>{" "}
-                        para dicho jugador.
-                      </span>
-                    </li>
                   </ul>
                 </div>
 
@@ -377,12 +361,21 @@ export default function LlaveTorneoPage() {
                     </li>
 
                     <li className="flex gap-3">
-                      <span>❌</span>
+                      <span>🔌</span>
                       <span>
-                        Modificar la configuración obligatoria, abandonar el
-                        partido o desconectarse intencionalmente podrá
-                        derivar en sanciones o la pérdida del encuentro, de
-                        acuerdo con el reglamento de Gaming Experience GMP.
+                        Si a alguno de los jugadores se le corta la
+                        conexión durante el partido, este debe continuar
+                        respetando el marcador en el que quedó al momento
+                        del corte (se recomienda sacar una captura de
+                        pantalla de ese marcador como respaldo). Al
+                        finalizar, ambos jugadores deben reportar el
+                        resultado adjuntando sus capturas correspondientes.
+                        Si el rival abandona el partido y pasan más de{" "}
+                        <span className="font-semibold text-white">
+                          5 minutos
+                        </span>{" "}
+                        sin que se reconecte, el jugador que permaneció en
+                        el partido será declarado ganador.
                       </span>
                     </li>
                   </ul>
@@ -393,7 +386,7 @@ export default function LlaveTorneoPage() {
         )}
 
         {/* INFO BAR */}
-        <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-8 py-6 flex flex-wrap gap-y-6 gap-x-10">
+        <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 sm:px-8 py-6 flex flex-wrap gap-y-6 gap-x-10">
 
           <div className="flex items-center gap-3">
             <Gamepad2 className="text-zinc-500" size={22} />
@@ -429,27 +422,13 @@ export default function LlaveTorneoPage() {
             <Trophy className="text-zinc-500" size={22} />
             <div>
               <p className="text-zinc-500 text-xs uppercase tracking-wide">
-                Premio 1er puesto
+                Premio
               </p>
               <p className="font-bold">
                 ${torneo?.premio?.toLocaleString("es-AR")}
               </p>
             </div>
           </div>
-
-          {!!torneo?.premio_segundo && (
-            <div className="flex items-center gap-3">
-              <Medal className="text-zinc-500" size={22} />
-              <div>
-                <p className="text-zinc-500 text-xs uppercase tracking-wide">
-                  Premio 2do puesto
-                </p>
-                <p className="font-bold">
-                  ${torneo.premio_segundo.toLocaleString("es-AR")}
-                </p>
-              </div>
-            </div>
-          )}
 
           <div className="flex items-center gap-3">
             <Users className="text-zinc-500" size={22} />
@@ -474,14 +453,18 @@ export default function LlaveTorneoPage() {
           </div>
         ) : (
           <div className="mt-10 rounded-3xl border border-zinc-800 bg-zinc-950/60 p-8">
-
             <Bracket
               jugadoresMax={torneo!.jugadores_max}
               miUsuario={miUsuario}
               torneoId={id}
+              finalTerminada={finalTerminada}
+              campeon={torneo?.campeon}
+              mostrarReclamar={soyCampeon}
+              onReclamarPremio={() => setSoporteAbierto(true)}
               partidos={partidos.map((p) => ({
                 id: p.id,
                 ronda: p.ronda,
+                numero_partido: p.numero_partido,
 
                 jugador1: p.jugador1,
                 jugador2: p.jugador2,
@@ -498,62 +481,6 @@ export default function LlaveTorneoPage() {
                 ganador: p.ganador,
               }))}
             />
-
-            {/* CAMPEÓN Y SUBCAMPEÓN, centrados debajo de la llave */}
-            <div className="mt-10 flex flex-wrap items-stretch justify-center gap-6">
-
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-red-600/60 bg-gradient-to-b from-red-950/40 to-zinc-950 px-6 py-10 w-64">
-                <div className="rounded-2xl border-2 border-red-600 p-5 mb-5">
-                  <Trophy className="text-red-500" size={40} />
-                </div>
-
-                <p className="text-zinc-400 text-sm font-bold tracking-widest">
-                  CAMPEÓN
-                </p>
-
-                <p className="text-2xl font-black mt-1 text-center border-b-2 border-red-600 pb-2">
-                  {finalTerminada ? torneo?.campeon : "Por definir"}
-                </p>
-
-                {finalTerminada && !!torneo?.premio && (
-                  <p className="text-red-400 font-bold mt-3">
-                    ${torneo.premio.toLocaleString("es-AR")}
-                  </p>
-                )}
-
-                {soyCampeon && (
-                  <button
-                    onClick={() => setSoporteAbierto(true)}
-                    className="mt-5 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-3 flex items-center justify-center gap-2 transition"
-                  >
-                    <Trophy size={16} />
-                    Reclamar mi premio
-                  </button>
-                )}
-              </div>
-
-              {finalTerminada && subcampeon && !!torneo?.premio_segundo && (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 px-6 py-8 w-64">
-                  <div className="rounded-2xl border-2 border-zinc-600 p-4 mb-4">
-                    <Medal className="text-zinc-400" size={32} />
-                  </div>
-
-                  <p className="text-zinc-400 text-sm font-bold tracking-widest">
-                    SUBCAMPEÓN
-                  </p>
-
-                  <p className="text-xl font-black mt-1 text-center border-b-2 border-zinc-600 pb-2">
-                    {subcampeon}
-                  </p>
-
-                  <p className="text-zinc-300 font-bold mt-3">
-                    ${torneo.premio_segundo.toLocaleString("es-AR")}
-                  </p>
-                </div>
-              )}
-
-            </div>
-
           </div>
         )}
 
@@ -607,7 +534,3 @@ export default function LlaveTorneoPage() {
     </main>
   );
 }
-
-
-
-

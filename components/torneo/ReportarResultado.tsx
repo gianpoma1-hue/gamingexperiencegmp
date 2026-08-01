@@ -145,6 +145,30 @@ export default function ReportarResultado({
 
       if (error) throw error;
 
+      // Si quien reporta es un jugador (no el admin), avisamos a todos
+      // los admins con una notificación en la campanita.
+      if (!esAdmin) {
+        const { data: admins } = await supabase
+          .from("usuarios")
+          .select("usuario")
+          .eq("es_admin", true);
+
+        if (admins && admins.length > 0) {
+          const notificacionesAdmin = admins.map((a) => ({
+            usuario: a.usuario,
+            tipo: "resultado_reportado",
+            titulo: "Nuevo resultado reportado",
+            contenido: `${miUsuario} reportó un resultado${
+              rival ? ` vs ${rival}` : ""
+            }.`,
+            link: `/torneos/llave/${torneoId}`,
+            leida: false,
+          }));
+
+          await supabase.from("notificaciones").insert(notificacionesAdmin);
+        }
+      }
+
       setTexto("");
       setArchivo(null);
       await cargarMensajes();

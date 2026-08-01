@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { Trophy } from "lucide-react";
@@ -53,11 +53,30 @@ export default function Bracket({
   mostrarReclamar,
   onReclamarPremio,
 }: Props) {
+  const outerRef = useRef<HTMLDivElement>(null);
   const contenidoRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [lineas, setLineas] = useState<Linea[]>([]);
   const [tamano, setTamano] = useState({ ancho: 0, alto: 0 });
+  const [escala, setEscala] = useState(1);
+
+  // Determina una sola vez, en el cliente, si hay que mostrar la versión
+  // apilada (celular) o la versión con líneas conectoras (escritorio).
+  // Se decide con JS (no solo con clases responsive) para que sea
+  // imposible que las dos versiones queden montadas al mismo tiempo.
+  const [esDesktop, setEsDesktop] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+
+    setEsDesktop(mq.matches);
+
+    const escuchar = (e: MediaQueryListEvent) => setEsDesktop(e.matches);
+
+    mq.addEventListener("change", escuchar);
+    return () => mq.removeEventListener("change", escuchar);
+  }, []);
 
   const rondas = partidos.reduce<Record<number, Partido[]>>((acc, partido) => {
     if (!acc[partido.ronda]) acc[partido.ronda] = [];
@@ -123,8 +142,50 @@ export default function Bracket({
         : partidoFinal.jugador1
       : null;
 
+  // 1) Mide el tamaño natural (sin escalar) del contenido y decide
+  // cuánto hay que achicarlo para que entre en el ancho disponible.
   useEffect(() => {
-    function calcular() {
+    if (!esDesktop) return;
+
+    function medirTamano() {
+      const contenedor = contenidoRef.current;
+      if (!contenedor) return;
+
+      const anchoNatural = contenedor.scrollWidth;
+      const altoNatural = contenedor.scrollHeight;
+
+      setTamano({ ancho: anchoNatural, alto: altoNatural });
+
+      const anchoDisponible =
+        outerRef.current?.clientWidth ?? anchoNatural;
+
+      if (anchoNatural > 0) {
+        const nuevaEscala = Math.min(
+          1,
+          Math.max(0.45, anchoDisponible / anchoNatural)
+        );
+        setEscala(nuevaEscala);
+      }
+    }
+
+    const id = requestAnimationFrame(medirTamano);
+    window.addEventListener("resize", medirTamano);
+
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("resize", medirTamano);
+    };
+  }, [partidos, totalRondas, esDesktop]);
+
+  // 2) Una vez que el achicado (escala) ya se aplicó de verdad en
+  // pantalla, recién ahí medimos dónde quedó cada tarjeta para dibujar
+  // las líneas. Si esto se hiciera antes de aplicar la escala (o con
+  // una escala vieja), las líneas terminan dibujadas en el lugar
+  // equivocado, como se vio con las flechas rotas.
+  useEffect(() => {
+    if (!esDesktop) return;
+
+    function calcularLineas() {
       const contenedor = contenidoRef.current;
       if (!contenedor) return;
 
@@ -144,11 +205,19 @@ export default function Bracket({
         const o = origen.getBoundingClientRect();
         const d = destino.getBoundingClientRect();
 
-        const x1 = (origenEdge === "right" ? o.right : o.left) - contRect.left;
-        const y1 = o.top + o.height / 2 - contRect.top;
+        // Los rects ya vienen en píxeles de pantalla (post-escala), así
+        // que dividimos por la escala actual para volver a las
+        // coordenadas "naturales" que usa el SVG (que siempre se mide
+        // sin escalar).
+        const x1 =
+          ((origenEdge === "right" ? o.right : o.left) - contRect.left) /
+          escala;
+        const y1 = (o.top + o.height / 2 - contRect.top) / escala;
 
-        const x2 = (destinoEdge === "right" ? d.right : d.left) - contRect.left;
-        const y2 = d.top + d.height / 2 - contRect.top;
+        const x2 =
+          ((destinoEdge === "right" ? d.right : d.left) - contRect.left) /
+          escala;
+        const y2 = (d.top + d.height / 2 - contRect.top) / escala;
 
         nuevas.push({ x1, y1, x2, y2 });
       }
@@ -194,27 +263,32 @@ export default function Bracket({
       }
 
       setLineas(nuevas);
-      setTamano({
-        ancho: contenedor.clientWidth,
-        alto: contenedor.clientHeight,
-      });
     }
 
-    const id = requestAnimationFrame(calcular);
-    window.addEventListener("resize", calcular);
+    // Esperamos dos frames para asegurarnos de que el navegador ya
+    // pintó el nuevo "transform: scale(...)" antes de medir.
+    const id = requestAnimationFrame(() =>
+      requestAnimationFrame(calcularLineas)
+    );
+    window.addEventListener("resize", calcularLineas);
 
     return () => {
       cancelAnimationFrame(id);
-      window.removeEventListener("resize", calcular);
+      window.removeEventListener("resize", calcularLineas);
     };
-  }, [partidos, totalRondas]);
+  }, [partidos, totalRondas, esDesktop, escala]);
 
   const rondasOrdenVertical = [...numerosRonda].sort((a, b) => a - b);
 
-  return (
-    <>
-      {/* ============ MOBILE: rondas apiladas, sin scroll horizontal ============ */}
-      <div className="lg:hidden space-y-10">
+  // Todavía no sabemos si es mobile o desktop (primer render en el
+  // servidor) -> no mostramos nada para evitar cualquier parpadeo.
+  if (esDesktop === null) {
+    return <div className="min-h-[200px]" />;
+  }
+
+  if (!esDesktop) {
+    return (
+      <div className="space-y-10">
         {rondasOrdenVertical.map((r) => (
           <div key={`mobile-ronda-${r}`}>
             <h3 className="text-center text-red-500 font-extrabold uppercase tracking-[0.2em] text-sm mb-4">
@@ -275,141 +349,153 @@ export default function Bracket({
           )}
         </div>
       </div>
+    );
+  }
 
-      {/* ============ DESKTOP: llave completa con líneas conectoras (sin cambios) ============ */}
-      <div className="hidden lg:block w-full overflow-x-auto">
+  // ================= DESKTOP: llave completa con líneas conectoras =================
+  return (
+    <div ref={outerRef} className="w-full overflow-x-auto">
       <div
-        ref={contenidoRef}
-        className="relative flex items-center justify-center gap-14 w-max min-w-full py-8 mx-auto"
+        style={{
+          height: tamano.alto * escala || undefined,
+        }}
       >
-        <svg
-          className="absolute inset-0 pointer-events-none"
-          width={tamano.ancho}
-          height={tamano.alto}
+        <div
+          ref={contenidoRef}
+          style={{
+            transform: `scale(${escala})`,
+            transformOrigin: "top left",
+          }}
+          className="relative flex items-center justify-center gap-14 w-max py-8"
         >
-          <defs>
-            <marker
-              id="flecha-bracket"
-              markerWidth="8"
-              markerHeight="8"
-              refX="6"
-              refY="4"
-              orient="auto"
-            >
-              <path d="M0 0 L8 4 L0 8 Z" fill="#dc2626" />
-            </marker>
-          </defs>
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            width={tamano.ancho}
+            height={tamano.alto}
+          >
+            <defs>
+              <marker
+                id="flecha-bracket"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <path d="M0 0 L8 4 L0 8 Z" fill="#dc2626" />
+              </marker>
+            </defs>
 
-          {lineas.map((l, i) => {
-            const medio = l.x1 + (l.x2 - l.x1) / 2;
+            {lineas.map((l, i) => {
+              const medio = l.x1 + (l.x2 - l.x1) / 2;
 
-            return (
-              <path
-                key={i}
-                d={`M ${l.x1} ${l.y1} H ${medio} V ${l.y2} H ${l.x2}`}
-                stroke="#dc2626"
-                strokeWidth={2}
-                fill="none"
-                markerEnd="url(#flecha-bracket)"
-              />
-            );
-          })}
-        </svg>
+              return (
+                <path
+                  key={i}
+                  d={`M ${l.x1} ${l.y1} H ${medio} V ${l.y2} H ${l.x2}`}
+                  stroke="#dc2626"
+                  strokeWidth={2}
+                  fill="none"
+                  markerEnd="url(#flecha-bracket)"
+                />
+              );
+            })}
+          </svg>
 
-        <div className="flex items-center gap-14">
-          {rondasIzqOrden.map((r) => (
-            <div key={`izq-${r}`} className="flex-1 min-w-0 flex justify-center">
-              <RoundColumn
-                ronda={r}
-                titulo={obtenerNombreRonda(r)}
-                partidos={izquierda[r] ?? []}
-                miUsuario={miUsuario}
-                torneoId={torneoId}
-                registrarRef={(n, el) => {
-                  cardRefs.current[`L-${r}-${n}`] = el;
-                }}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col items-center gap-8 shrink-0 z-10">
-          {partidoFinal && (
-            <div className="flex flex-col items-center">
-              <h2 className="text-center text-red-500 font-extrabold uppercase tracking-[0.25em] mb-8">
-                Final
-              </h2>
-
-              <div ref={(el) => { cardRefs.current["FINAL"] = el; }}>
-                <MatchCard
-                  id={partidoFinal.id}
-                  torneoId={torneoId}
-                  jugador1={partidoFinal.jugador1 ?? ""}
-                  jugador2={partidoFinal.jugador2 ?? ""}
-                  capitan1={partidoFinal.capitan1 ?? null}
-                  capitan2={partidoFinal.capitan2 ?? null}
-                  golesJugador1={partidoFinal.goles_jugador1}
-                  golesJugador2={partidoFinal.goles_jugador2}
-                  penalesJugador1={partidoFinal.penales_jugador1}
-                  penalesJugador2={partidoFinal.penales_jugador2}
-                  ganador={partidoFinal.ganador ?? null}
+          <div className="flex items-center gap-14">
+            {rondasIzqOrden.map((r) => (
+              <div key={`izq-${r}`} className="flex-1 min-w-0 flex justify-center">
+                <RoundColumn
+                  ronda={r}
+                  titulo={obtenerNombreRonda(r)}
+                  partidos={izquierda[r] ?? []}
                   miUsuario={miUsuario}
+                  torneoId={torneoId}
+                  registrarRef={(n, el) => {
+                    cardRefs.current[`L-${r}-${n}`] = el;
+                  }}
                 />
               </div>
-            </div>
-          )}
+            ))}
+          </div>
 
-          <div className="flex flex-col items-center w-64 rounded-2xl border border-red-600/60 bg-gradient-to-b from-red-950/40 to-zinc-950 px-6 py-8">
-            <div className="rounded-2xl border-2 border-red-600 p-4 mb-4">
-              <Trophy className="text-red-500" size={34} />
-            </div>
+          <div className="flex flex-col items-center gap-8 shrink-0 z-10">
+            {partidoFinal && (
+              <div className="flex flex-col items-center">
+                <h2 className="text-center text-red-500 font-extrabold uppercase tracking-[0.25em] mb-8">
+                  Final
+                </h2>
 
-            <p className="text-zinc-400 text-xs font-bold tracking-widest">
-              CAMPEÓN
-            </p>
-
-            <p className="text-xl font-black mt-1 text-center border-b-2 border-red-600 pb-2 w-full">
-              {finalTerminada ? campeon : "Por definir"}
-            </p>
-
-            <p className="text-zinc-500 text-xs font-bold tracking-widest mt-4">
-              SUBCAMPEÓN
-            </p>
-
-            <p className="text-base font-bold mt-1 text-center text-zinc-300">
-              {finalTerminada ? subcampeon : "Por definir"}
-            </p>
-
-            {mostrarReclamar && (
-              <button
-                onClick={onReclamarPremio}
-                className="mt-5 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-3 flex items-center justify-center gap-2 transition"
-              >
-                <Trophy size={16} />
-                Reclamar mi premio
-              </button>
+                <div ref={(el) => { cardRefs.current["FINAL"] = el; }}>
+                  <MatchCard
+                    id={partidoFinal.id}
+                    torneoId={torneoId}
+                    jugador1={partidoFinal.jugador1 ?? ""}
+                    jugador2={partidoFinal.jugador2 ?? ""}
+                    capitan1={partidoFinal.capitan1 ?? null}
+                    capitan2={partidoFinal.capitan2 ?? null}
+                    golesJugador1={partidoFinal.goles_jugador1}
+                    golesJugador2={partidoFinal.goles_jugador2}
+                    penalesJugador1={partidoFinal.penales_jugador1}
+                    penalesJugador2={partidoFinal.penales_jugador2}
+                    ganador={partidoFinal.ganador ?? null}
+                    miUsuario={miUsuario}
+                  />
+                </div>
+              </div>
             )}
+
+            <div className="flex flex-col items-center w-64 rounded-2xl border border-red-600/60 bg-gradient-to-b from-red-950/40 to-zinc-950 px-6 py-8">
+              <div className="rounded-2xl border-2 border-red-600 p-4 mb-4">
+                <Trophy className="text-red-500" size={34} />
+              </div>
+
+              <p className="text-zinc-400 text-xs font-bold tracking-widest">
+                CAMPEÓN
+              </p>
+
+              <p className="text-xl font-black mt-1 text-center border-b-2 border-red-600 pb-2 w-full">
+                {finalTerminada ? campeon : "Por definir"}
+              </p>
+
+              <p className="text-zinc-500 text-xs font-bold tracking-widest mt-4">
+                SUBCAMPEÓN
+              </p>
+
+              <p className="text-base font-bold mt-1 text-center text-zinc-300">
+                {finalTerminada ? subcampeon : "Por definir"}
+              </p>
+
+              {mostrarReclamar && (
+                <button
+                  onClick={onReclamarPremio}
+                  className="mt-5 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-3 flex items-center justify-center gap-2 transition"
+                >
+                  <Trophy size={16} />
+                  Reclamar mi premio
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-14">
+            {rondasDerOrden.map((r) => (
+              <div key={`der-${r}`} className="flex-1 min-w-0 flex justify-center">
+                <RoundColumn
+                  ronda={r}
+                  titulo={obtenerNombreRonda(r)}
+                  partidos={derecha[r] ?? []}
+                  miUsuario={miUsuario}
+                  torneoId={torneoId}
+                  registrarRef={(n, el) => {
+                    cardRefs.current[`R-${r}-${n}`] = el;
+                  }}
+                />
+              </div>
+            ))}
           </div>
         </div>
-
-        <div className="flex items-center gap-14">
-          {rondasDerOrden.map((r) => (
-            <div key={`der-${r}`} className="flex-1 min-w-0 flex justify-center">
-              <RoundColumn
-                ronda={r}
-                titulo={obtenerNombreRonda(r)}
-                partidos={derecha[r] ?? []}
-                miUsuario={miUsuario}
-                torneoId={torneoId}
-                registrarRef={(n, el) => {
-                  cardRefs.current[`R-${r}-${n}`] = el;
-                }}
-              />
-            </div>
-          ))}
-        </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }
