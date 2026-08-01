@@ -20,6 +20,7 @@ const iconoPorTipo: Record<string, string> = {
   mensaje: "💬",
   torneo_nuevo: "🆕",
   torneo_pronto: "⏰",
+  pago_transferido: "💸",
 };
 
 export default function NotificationBell() {

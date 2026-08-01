@@ -166,6 +166,24 @@ export default function InscripcionPage() {
 
     setYaInscripto(true);
     setEstadoPago("pendiente");
+
+    // Avisamos a todos los admins
+    const { data: admins } = await supabase
+      .from("usuarios")
+      .select("usuario")
+      .eq("es_admin", true);
+
+    if (admins && admins.length > 0) {
+      await supabase.from("notificaciones").insert(
+        admins.map((admin) => ({
+          usuario: admin.usuario,
+          tipo: "pago_transferido",
+          titulo: "Nuevo pago informado",
+          contenido: `${perfil.usuario} dijo que ya transfirió para "${torneo.nombre}"`,
+          link: "/admin/inscripciones",
+        }))
+      );
+    }
   }
 
   if (loading) {
