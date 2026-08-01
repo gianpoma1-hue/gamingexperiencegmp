@@ -12,6 +12,7 @@ export type TorneoCardData = {
   premio_segundo?: number | null;
   inscripcion: number;
   fecha: string;
+  hora?: string | null;
   estado: string;
   campeon: string | null;
   inscritos: number;
@@ -57,7 +58,7 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
       </div>
 
       {/* Datos del torneo */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-6 mt-4 lg:mt-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-6 mt-4 lg:mt-6">
         <div>
           <p className="text-zinc-500 text-xs lg:text-sm">Inscripción</p>
           <h3 className="text-sm sm:text-lg font-black">
@@ -75,9 +76,22 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
         <div>
           <p className="text-zinc-500 text-xs lg:text-sm">Fecha</p>
           <h3 className="text-sm sm:text-lg font-bold">
-            {new Date(torneo.fecha).toLocaleDateString("es-AR")}
+            {new Date(torneo.fecha).toLocaleDateString("es-AR", {
+              timeZone: "UTC",
+            })}
           </h3>
         </div>
+
+        {torneo.hora && (
+          <div>
+            <p className="text-zinc-500 text-xs lg:text-sm">
+              Hora de comienzo
+            </p>
+            <h3 className="text-sm sm:text-lg font-bold">
+              {torneo.hora}
+            </h3>
+          </div>
+        )}
       </div>
 
       {/* Acción según el estado del torneo */}
