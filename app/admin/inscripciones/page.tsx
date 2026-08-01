@@ -13,7 +13,7 @@ type Inscripcion = {
   created_at: string;
   torneo_id: string;
   estado_pago: "pendiente" | "confirmado" | "rechazado";
-  torneos: { nombre: string; }[];
+  torneos: { nombre: string } | null;
 };
 
 export default function AdminInscripcionesPage() {
@@ -159,7 +159,7 @@ export default function AdminInscripcionesPage() {
                       <p className="text-zinc-400">
                         Torneo:{" "}
                         <span className="text-red-500 font-bold">
-                          {inscripcion.torneos?.[0]?.nombre ?? "Sin torneo"}
+                          {inscripcion.torneos?.nombre ?? "Sin torneo"}
                         </span>
                       </p>
 

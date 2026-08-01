@@ -39,7 +39,8 @@ export default function EAFCTorneosPage() {
             count: "exact",
             head: true,
           })
-          .eq("torneo_id", torneo.id);
+          .eq("torneo_id", torneo.id)
+          .neq("estado_pago", "rechazado");
 
         return {
           ...torneo,

@@ -81,7 +81,8 @@ export default function InscripcionPage() {
         count: "exact",
         head: true,
       })
-      .eq("torneo_id", torneoId);
+      .eq("torneo_id", torneoId)
+      .neq("estado_pago", "rechazado");
 
     const inscritos = count || 0;
 
@@ -146,7 +147,6 @@ export default function InscripcionPage() {
         torneo_id: torneo.id,
         nombre: perfil.nombre,
         usuario: perfil.usuario,
-        plataforma: perfil.plataforma,
         estado_pago: "pendiente",
         equipo: torneo.modalidad === "equipo" ? equipo.trim() : null,
       });

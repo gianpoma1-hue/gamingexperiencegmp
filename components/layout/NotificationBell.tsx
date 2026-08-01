@@ -21,6 +21,7 @@ const iconoPorTipo: Record<string, string> = {
   torneo_nuevo: "🆕",
   torneo_pronto: "⏰",
   pago_transferido: "💸",
+  agregado_torneo: "🎮",
 };
 
 export default function NotificationBell() {
