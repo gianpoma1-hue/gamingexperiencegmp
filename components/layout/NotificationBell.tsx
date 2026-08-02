@@ -22,6 +22,7 @@ const iconoPorTipo: Record<string, string> = {
   torneo_pronto: "⏰",
   pago_transferido: "💸",
   resultado_reportado: "📸",
+  comunidad_whatsapp: "🟢",
 };
 
 export default function NotificationBell() {
@@ -81,7 +82,11 @@ export default function NotificationBell() {
     setAbierto(false);
 
     if (n.link) {
-      router.push(n.link);
+      if (n.link.startsWith("http")) {
+        window.open(n.link, "_blank", "noopener,noreferrer");
+      } else {
+        router.push(n.link);
+      }
     }
   }
 

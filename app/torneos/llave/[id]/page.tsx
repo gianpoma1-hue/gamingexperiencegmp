@@ -202,19 +202,31 @@ export default function LlaveTorneoPage() {
                 <li className="flex gap-3">
                   <span className="text-yellow-500 font-bold">1.</span>
                   <span>
-                    Comunicate con tu rival a través del{" "}
+                    Contactate con tu rival desde el{" "}
                     <span className="font-semibold text-white">
                       chat del partido
-                    </span>{" "}
-                    para intercambiar el ID o nombre de usuario del juego y
-                    agregarse mutuamente en Truco Blyts.
+                    </span>
+                    , intercambien su ID de Truco Blyts y agréguense.
                   </span>
                 </li>
 
                 <li className="flex gap-3">
                   <span className="text-yellow-500 font-bold">2.</span>
                   <span>
-                    El jugador que cree la partida debe configurarla a{" "}
+                    Una vez confirmada la ronda, ambos jugadores dispondrán
+                    de un máximo de{" "}
+                    <span className="font-semibold text-white">
+                      10 minutos
+                    </span>{" "}
+                    para iniciar la partida. Si un jugador no se presenta
+                    dentro de ese plazo, perderá el encuentro.
+                  </span>
+                </li>
+
+                <li className="flex gap-3">
+                  <span className="text-yellow-500 font-bold">3.</span>
+                  <span>
+                    El jugador que cree la partida deberá configurarla a{" "}
                     <span className="font-semibold text-white">
                       30 puntos y sin flor
                     </span>
@@ -223,49 +235,29 @@ export default function LlaveTorneoPage() {
                 </li>
 
                 <li className="flex gap-3">
-                  <span className="text-yellow-500 font-bold">3.</span>
-                  <span>
-                    Una vez finalizada la partida, es{" "}
-                    <span className="font-semibold text-white">
-                      obligatorio
-                    </span>{" "}
-                    que ambos jugadores ingresen a "Reportar resultado" y
-                    carguen el mismo resultado. En caso de que los resultados
-                    cargados no coincidan, el ganador deberá adjuntar una
-                    captura de pantalla del resultado final de la partida
-                    como respaldo.
-                  </span>
-                </li>
-
-                <li className="flex gap-3">
                   <span className="text-yellow-500 font-bold">4.</span>
                   <span>
-                    El equipo campeón deberá reportar su resultado y luego
-                    dirigirse a la sección de{" "}
+                    Al finalizar el partido, ambos jugadores deberán
+                    reportar el{" "}
                     <span className="font-semibold text-white">
-                      Mensajes
-                    </span>{" "}
-                    (arriba, junto al perfil) para comunicarse con la
-                    organización y coordinar la entrega del premio.
+                      mismo resultado
+                    </span>
+                    . Si hay diferencias, el ganador deberá presentar una
+                    captura del resultado final.
                   </span>
                 </li>
 
                 <li className="flex gap-3">
                   <span className="text-yellow-500 font-bold">5.</span>
                   <span>
-                    Si a alguno de los jugadores se le corta la conexión
-                    durante la partida, esta debe continuar respetando el
-                    marcador en el que quedó al momento del corte (se
-                    recomienda sacar una captura de pantalla de ese
-                    marcador como respaldo). Al finalizar, ambos jugadores
-                    deben reportar el resultado adjuntando sus capturas
-                    correspondientes. Si el rival abandona la partida y
-                    pasan más de{" "}
+                    Si un jugador se desconecta, la partida deberá
+                    continuar respetando el marcador. Si el rival no se
+                    reconecta dentro de los{" "}
                     <span className="font-semibold text-white">
                       5 minutos
-                    </span>{" "}
-                    sin que se reconecte, el jugador que permaneció en la
-                    partida será declarado ganador.
+                    </span>
+                    , el jugador que permaneció en la partida será
+                    declarado ganador.
                   </span>
                 </li>
               </ul>

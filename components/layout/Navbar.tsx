@@ -67,11 +67,11 @@ export default function Navbar() {
 
           <div className="text-left">
             <h1 className="font-bold text-sm sm:text-lg leading-tight">
-              Gaming Experience
+              GMP
             </h1>
 
             <p className="text-red-600 text-xs sm:text-sm font-bold leading-tight">
-              GMP
+              Gaming
             </p>
           </div>
         </button>

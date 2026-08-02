@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
@@ -13,8 +13,11 @@ type Inscripcion = {
   created_at: string;
   torneo_id: string;
   estado_pago: "pendiente" | "confirmado" | "rechazado";
-  torneos: { nombre: string } | null;
+  torneos: { nombre: string; juego: string; }[];
 };
+
+// TODO: reemplazar por el link real de invitaciÃ³n al grupo de WhatsApp.
+const WHATSAPP_COMUNIDAD_TRUCO = "https://chat.whatsapp.com/D8MrGrNL8TqH3J1fqombZa";
 
 export default function AdminInscripcionesPage() {
   const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
@@ -38,7 +41,8 @@ export default function AdminInscripcionesPage() {
         torneo_id,
         estado_pago,
         torneos (
-          nombre
+          nombre,
+          juego
         )
       `)
       .order("created_at", { ascending: false });
@@ -47,7 +51,7 @@ export default function AdminInscripcionesPage() {
       console.error(error);
       alert("Error al cargar las inscripciones.");
     } else {
-      setInscripciones((data as unknown as Inscripcion[]) || []);
+      setInscripciones((data as Inscripcion[]) || []);
     }
 
     setLoading(false);
@@ -67,12 +71,29 @@ export default function AdminInscripcionesPage() {
       return;
     }
 
+    if (estado_pago === "confirmado") {
+      const inscripcion = inscripciones.find((i) => i.id === id);
+      const juego = inscripcion?.torneos?.[0]?.juego;
+
+      if (inscripcion && juego === "Truco Blyts") {
+        await supabase.from("notificaciones").insert({
+          usuario: inscripcion.usuario,
+          tipo: "comunidad_whatsapp",
+          titulo: "Â¡Tu pago fue confirmado! ðŸŽ‰",
+          contenido:
+            "Sumate a la comunidad de WhatsApp de GMP Gaming para enterarte cuÃ¡ndo arranca cada fase, cuÃ¡ndo te toca jugar y todas las novedades del torneo.",
+          link: WHATSAPP_COMUNIDAD_TRUCO,
+          leida: false,
+        });
+      }
+    }
+
     cargarInscripciones();
   }
 
   async function eliminarInscripcion(id: string) {
     const confirmar = confirm(
-      "¿Seguro que querés eliminar esta inscripción?"
+      "Â¿Seguro que querÃ©s eliminar esta inscripciÃ³n?"
     );
 
     if (!confirmar) return;
@@ -159,7 +180,7 @@ export default function AdminInscripcionesPage() {
                       <p className="text-zinc-400">
                         Torneo:{" "}
                         <span className="text-red-500 font-bold">
-                          {inscripcion.torneos?.nombre ?? "Sin torneo"}
+                          {inscripcion.torneos?.[0]?.nombre ?? "Sin torneo"}
                         </span>
                       </p>
 
@@ -219,3 +240,4 @@ export default function AdminInscripcionesPage() {
     </main>
   );
 }
+
