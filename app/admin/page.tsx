@@ -61,8 +61,24 @@ export default function AdminTorneosPage() {
   }
 
   async function empezarTorneo(torneoId: string) {
+    // Buscar inscriptos primero para poder mostrar el conteo real
+    // en el aviso de confirmación.
+    const { data: inscriptosPrevios, error: errorPrevio } = await supabase
+      .from("inscripciones")
+      .select("estado_pago")
+      .eq("torneo_id", torneoId);
+
+    if (errorPrevio) {
+      alert(errorPrevio.message);
+      return;
+    }
+
+    const confirmados =
+      inscriptosPrevios?.filter((i) => i.estado_pago === "confirmado")
+        .length ?? 0;
+
     const confirmar = confirm(
-      "¿Querés comenzar este torneo?"
+      `¿Querés comenzar este torneo?\n\nJugadores con pago confirmado: ${confirmados}\n\nEsta acción genera la llave y no se puede deshacer desde la web (habría que pedirle ayuda a Claude para revertirlo a mano en la base de datos).`
     );
 
     if (!confirmar) return;
