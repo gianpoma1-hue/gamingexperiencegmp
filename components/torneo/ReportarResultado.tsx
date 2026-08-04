@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Send, Paperclip, ShieldCheck, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { avisarWhatsAppAdmin } from "@/lib/callmebot";
 
 type ReporteMensaje = {
   id: string;
@@ -166,6 +167,12 @@ export default function ReportarResultado({
           }));
 
           await supabase.from("notificaciones").insert(notificacionesAdmin);
+
+          await avisarWhatsAppAdmin(
+            `📸 Nuevo resultado reportado\n${miUsuario} reportó un resultado${
+              rival ? ` vs ${rival}` : ""
+            }.`
+          );
         }
       }
 

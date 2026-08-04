@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 import TorneoCard, { TorneoCardData } from "@/components/torneo/TorneoCard";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -13,13 +14,29 @@ const WHATSAPP_COMUNIDAD_TRUCO = "https://chat.whatsapp.com/D8MrGrNL8TqH3J1fqomb
 
 export default function TrucoBlytsTorneosPage() {
   const router = useRouter();
+  const { user } = useAuth();
 
+  const [miUsuario, setMiUsuario] = useState<string | null>(null);
   const [torneos, setTorneos] = useState<TorneoCardData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) {
+      setMiUsuario(null);
+      return;
+    }
+
+    supabase
+      .from("usuarios")
+      .select("usuario")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => setMiUsuario(data?.usuario ?? null));
+  }, [user]);
+
+  useEffect(() => {
     cargarTorneos();
-  }, []);
+  }, [miUsuario]);
 
   async function cargarTorneos() {
     setLoading(true);
@@ -46,9 +63,28 @@ export default function TrucoBlytsTorneosPage() {
           })
           .eq("torneo_id", torneo.id);
 
+        let miInscripcion: "pendiente" | "confirmado" | null = null;
+
+        if (miUsuario) {
+          const { data: propia } = await supabase
+            .from("inscripciones")
+            .select("estado_pago")
+            .eq("torneo_id", torneo.id)
+            .eq("usuario", miUsuario)
+            .maybeSingle();
+
+          if (propia) {
+            miInscripcion =
+              propia.estado_pago === "confirmado"
+                ? "confirmado"
+                : "pendiente";
+          }
+        }
+
         return {
           ...torneo,
           inscritos: count || 0,
+          miInscripcion,
         };
       })
     );
@@ -90,7 +126,7 @@ export default function TrucoBlytsTorneosPage() {
             <p className="font-bold text-sm sm:text-base">
               Comunidad de WhatsApp — Truco Blyts
             </p>
-            <p className="text-zinc-400 text-xs sm:text-sm truncate">
+            <p className="text-zinc-400 text-xs sm:text-sm">
               Sumate al grupo oficial de GMP Gaming para novedades y ver
               los avances de cada ronda.
             </p>

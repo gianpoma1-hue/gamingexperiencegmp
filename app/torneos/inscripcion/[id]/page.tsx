@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { avisarWhatsAppAdmin } from "@/lib/callmebot";
 
 type Torneo = {
   id: string;
@@ -81,8 +82,7 @@ export default function InscripcionPage() {
         count: "exact",
         head: true,
       })
-      .eq("torneo_id", torneoId)
-      .neq("estado_pago", "rechazado");
+      .eq("torneo_id", torneoId);
 
     const inscritos = count || 0;
 
@@ -147,6 +147,7 @@ export default function InscripcionPage() {
         torneo_id: torneo.id,
         nombre: perfil.nombre,
         usuario: perfil.usuario,
+        plataforma: perfil.plataforma,
         estado_pago: "pendiente",
         equipo: torneo.modalidad === "equipo" ? equipo.trim() : null,
       });
@@ -182,6 +183,10 @@ export default function InscripcionPage() {
           contenido: `${perfil.usuario} dijo que ya transfirió para "${torneo.nombre}"`,
           link: "/admin/inscripciones",
         }))
+      );
+
+      await avisarWhatsAppAdmin(
+        `💸 Nuevo pago informado\n${perfil.usuario} dijo que ya transfirió para "${torneo.nombre}".`
       );
     }
   }

@@ -1,20 +1,37 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 import TorneoCard, { TorneoCardData } from "@/components/torneo/TorneoCard";
 
 export default function EAFCTorneosPage() {
   const router = useRouter();
+  const { user } = useAuth();
 
+  const [miUsuario, setMiUsuario] = useState<string | null>(null);
   const [torneos, setTorneos] = useState<TorneoCardData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) {
+      setMiUsuario(null);
+      return;
+    }
+
+    supabase
+      .from("usuarios")
+      .select("usuario")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => setMiUsuario(data?.usuario ?? null));
+  }, [user]);
+
+  useEffect(() => {
     cargarTorneos();
-  }, []);
+  }, [miUsuario]);
 
   async function cargarTorneos() {
     setLoading(true);
@@ -39,12 +56,30 @@ export default function EAFCTorneosPage() {
             count: "exact",
             head: true,
           })
-          .eq("torneo_id", torneo.id)
-          .neq("estado_pago", "rechazado");
+          .eq("torneo_id", torneo.id);
+
+        let miInscripcion: "pendiente" | "confirmado" | null = null;
+
+        if (miUsuario) {
+          const { data: propia } = await supabase
+            .from("inscripciones")
+            .select("estado_pago")
+            .eq("torneo_id", torneo.id)
+            .eq("usuario", miUsuario)
+            .maybeSingle();
+
+          if (propia) {
+            miInscripcion =
+              propia.estado_pago === "confirmado"
+                ? "confirmado"
+                : "pendiente";
+          }
+        }
 
         return {
           ...torneo,
           inscritos: count || 0,
+          miInscripcion,
         };
       })
     );
