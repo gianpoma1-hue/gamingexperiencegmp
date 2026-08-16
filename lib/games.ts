@@ -60,9 +60,10 @@ export const juegos: Game[] = [
     id: "lol",
     nombre: "League of Legends",
     imagen: "/images/games/lol.jpg",
-    disponible: false,
-    ruta: "/torneos/proximamente",
-    modalidad: "individual",  },
+    disponible: true,
+    ruta: "/torneos/league-of-legends",
+    modalidad: "individual",
+  },
   {
     id: "cs2",
     nombre: "Counter-Strike 2",
@@ -72,3 +73,13 @@ export const juegos: Game[] = [
     modalidad: "individual",
   },
 ];
+
+// Cantidad de jugadores por equipo en modalidad "equipo", según el juego.
+// Si un juego no está listado acá, se asume 2 (2v2).
+export const JUGADORES_POR_EQUIPO: Record<string, number> = {
+  "League of Legends": 5,
+};
+
+export function jugadoresPorEquipo(nombreJuego: string): number {
+  return JUGADORES_POR_EQUIPO[nombreJuego] ?? 2;
+}

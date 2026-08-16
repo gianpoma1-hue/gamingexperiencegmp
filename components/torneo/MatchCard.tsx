@@ -15,6 +15,9 @@ type MatchCardProps = {
   jugador1: string;
   jugador2: string;
 
+  trucoId1?: string | null;
+  trucoId2?: string | null;
+
   capitan1?: string | null;
   capitan2?: string | null;
 
@@ -36,6 +39,8 @@ export default function MatchCard({
   seed2,
   jugador1,
   jugador2,
+  trucoId1,
+  trucoId2,
   capitan1,
   capitan2,
   golesJugador1,
@@ -62,12 +67,14 @@ export default function MatchCard({
   function Fila({
     seed,
     nombre,
+    trucoId,
     goles,
     penales,
     gano,
   }: {
     seed?: number;
     nombre: string;
+    trucoId?: string | null;
     goles: number | null;
     penales: number | null;
     gano: boolean;
@@ -82,23 +89,32 @@ export default function MatchCard({
       >
         <div className="flex items-center gap-2 min-w-0">
           {seed !== undefined && (
-            <div className="w-5 h-5 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold flex items-center justify-center shrink-0">
               {seed}
             </div>
           )}
 
-          <span
-            className={`truncate text-sm font-semibold ${
-              gano ? "text-white" : "text-zinc-300"
-            }`}
-          >
-            {nombre || "Pendiente"}
-          </span>
+          <div className="min-w-0">
+            <span
+              className={`block truncate text-sm font-semibold ${
+                gano ? "text-white" : "text-zinc-300"
+              }`}
+            >
+              {nombre || "Pendiente"}
+            </span>
+
+            {trucoId && (
+              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 text-[10px] font-bold text-blue-400">
+                <span aria-hidden>➜</span>
+                ID: {trucoId}
+              </span>
+            )}
+          </div>
         </div>
 
         {goles !== null && (
           <div
-            className={`min-w-[30px] text-center rounded-md px-2 py-1 text-xs font-black ${
+            className={`min-w-[30px] text-center rounded-md px-2 py-1 text-xs font-black shrink-0 ${
               gano
                 ? "bg-red-600 text-white"
                 : "bg-zinc-800 text-zinc-300"
@@ -119,6 +135,7 @@ export default function MatchCard({
         <Fila
           seed={seed1}
           nombre={jugador1}
+          trucoId={trucoId1}
           goles={golesJugador1}
           penales={penalesJugador1}
           gano={gano1}
@@ -129,6 +146,7 @@ export default function MatchCard({
         <Fila
           seed={seed2}
           nombre={jugador2}
+          trucoId={trucoId2}
           goles={golesJugador2}
           penales={penalesJugador2}
           gano={gano2}

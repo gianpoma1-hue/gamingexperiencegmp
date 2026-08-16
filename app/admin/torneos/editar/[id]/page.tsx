@@ -6,12 +6,13 @@ import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
-import { juegos } from "@/lib/games";
+import { juegos, jugadoresPorEquipo } from "@/lib/games";
 
 const JUEGOS_CON_EQUIPO = [
   "EA SPORTS FC 26",
   "Rocket League",
   "Truco Blyts",
+  "League of Legends",
 ];
 
 const OPCIONES_JUGADORES = [2, 4, 8, 16, 32, 64];
@@ -205,14 +206,17 @@ export default function EditarTorneoPage() {
                   <option value="individual">Individual (1v1)</option>
 
                   {permiteEquipo && (
-                    <option value="equipo">En equipo (2v2)</option>
+                    <option value="equipo">
+                      En equipo ({jugadoresPorEquipo(juego)}v{jugadoresPorEquipo(juego)})
+                    </option>
                   )}
                 </select>
 
                 {!permiteEquipo && (
                   <p className="text-xs text-zinc-500 mt-2">
-                    El modo por equipos (2v2) solo está disponible para EA
-                    SPORTS FC 26, Rocket League y Truco Blyts.
+                    El modo por equipos solo está disponible para EA
+                    SPORTS FC 26, Rocket League, Truco Blyts y League of
+                    Legends.
                   </p>
                 )}
               </div>

@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { avisarWhatsAppAdmin } from "@/lib/callmebot";
+import { jugadoresPorEquipo } from "@/lib/games";
 
 type Torneo = {
   id: string;
@@ -45,6 +46,7 @@ export default function InscripcionPage() {
 
   const [paso, setPaso] = useState<"revisar" | "pago">("revisar");
   const [equipo, setEquipo] = useState("");
+  const [trucoId, setTrucoId] = useState("");
   const [datosPago, setDatosPago] = useState({
     titular: "",
     cbu: "",
@@ -150,6 +152,8 @@ export default function InscripcionPage() {
         plataforma: perfil.plataforma,
         estado_pago: "pendiente",
         equipo: torneo.modalidad === "equipo" ? equipo.trim() : null,
+        truco_id:
+          torneo.juego?.toLowerCase().includes("truco") ? trucoId.trim() : null,
       });
 
     setGuardando(false);
@@ -274,6 +278,28 @@ export default function InscripcionPage() {
                 <p className="font-bold text-lg">{perfil?.usuario}</p>
               </div>
 
+              {torneo?.juego?.toLowerCase().includes("truco") && (
+                <div>
+                  <p className="text-zinc-400 text-sm">
+                    ID de Truco Blyts
+                  </p>
+
+                  <input
+                    type="text"
+                    value={trucoId}
+                    onChange={(e) => setTrucoId(e.target.value)}
+                    placeholder="Ej: 9MHYH"
+                    className="mt-1 w-full rounded-lg bg-zinc-800 border border-zinc-700 px-4 py-3 text-white font-bold uppercase outline-none focus:border-red-600"
+                  />
+
+                  <p className="text-zinc-500 text-xs mt-2">
+                    Lo vamos a mostrar junto a tu nombre en la llave del
+                    torneo, para que tu rival te pueda agregar fácil
+                    dentro del juego.
+                  </p>
+                </div>
+              )}
+
               {torneo?.modalidad === "equipo" && (
                 <div>
                   <p className="text-zinc-400 text-sm">Nombre del equipo</p>
@@ -295,7 +321,7 @@ export default function InscripcionPage() {
                 {torneo?.modalidad === "equipo" && (
                   <p className="text-zinc-400 text-sm mt-1">
                     Este monto es único por equipo: cubre la inscripción de
-                    los 2 jugadores, no se paga por separado.
+                    los {jugadoresPorEquipo(torneo.juego)} jugadores, no se paga por separado.
                   </p>
                 )}
               </div>
@@ -311,6 +337,17 @@ export default function InscripcionPage() {
                   alert("Ingresá el nombre de tu equipo para continuar.");
                   return;
                 }
+
+                if (
+                  torneo?.juego?.toLowerCase().includes("truco") &&
+                  trucoId.trim().length === 0
+                ) {
+                  alert(
+                    "Ingresá tu ID de Truco Blyts para continuar — lo necesitamos para que tu rival te pueda agregar."
+                  );
+                  return;
+                }
+
                 setPaso("pago");
               }}
               className="w-full rounded-xl py-4 font-bold text-lg bg-red-600 hover:bg-red-700 transition"
@@ -329,7 +366,7 @@ export default function InscripcionPage() {
               {torneo?.modalidad === "equipo" && (
                 <p className="text-zinc-400 text-sm -mt-2">
                   Este monto corresponde a la inscripción completa del
-                  equipo "{equipo}" (vale por los 2 jugadores).
+                  equipo "{equipo}" (vale por los {jugadoresPorEquipo(torneo.juego)} jugadores).
                 </p>
               )}
 

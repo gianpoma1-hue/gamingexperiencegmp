@@ -43,6 +43,7 @@ export default function InscripcionPage() {
   const [estadoPago, setEstadoPago] = useState<EstadoPago>(null);
 
   const [paso, setPaso] = useState<"revisar" | "pago">("revisar");
+  const [trucoId, setTrucoId] = useState("");
 
   useEffect(() => {
     if (!authLoading) {
@@ -131,6 +132,10 @@ export default function InscripcionPage() {
         usuario: perfil.usuario,
         plataforma: perfil.plataforma,
         estado_pago: "pendiente",
+        truco_id:
+          torneo.juego?.toLowerCase().includes("truco")
+            ? trucoId.trim()
+            : null,
       });
 
     setGuardando(false);
@@ -238,6 +243,22 @@ export default function InscripcionPage() {
                 <p className="font-bold text-lg">{perfil?.plataforma}</p>
               </div>
 
+              {torneo?.juego?.toLowerCase().includes("truco") && (
+                <div>
+                  <p className="text-zinc-400 text-sm">
+                    ID de Truco Blyts
+                  </p>
+
+                  <input
+                    type="text"
+                    value={trucoId}
+                    onChange={(e) => setTrucoId(e.target.value)}
+                    placeholder="Ej: 9MHYH"
+                    className="mt-1 w-full rounded-lg bg-zinc-800 border border-zinc-700 px-4 py-3 text-white font-bold uppercase outline-none focus:border-red-600"
+                  />
+                </div>
+              )}
+
               <div>
                 <p className="text-zinc-400 text-sm">Monto de inscripción</p>
                 <p className="font-bold text-lg text-red-500">
@@ -249,7 +270,19 @@ export default function InscripcionPage() {
               <button
                 type="button"
                 className="w-full rounded-xl bg-red-500 px-5 py-3 font-semibold text-black transition hover:bg-red-400"
-                onClick={() => setPaso("pago")}
+                onClick={() => {
+                  if (
+                    torneo?.juego?.toLowerCase().includes("truco") &&
+                    trucoId.trim().length === 0
+                  ) {
+                    alert(
+                      "Ingresá el ID de Truco Blyts para continuar."
+                    );
+                    return;
+                  }
+
+                  setPaso("pago");
+                }}
               >
                 Continuar al pago
               </button>

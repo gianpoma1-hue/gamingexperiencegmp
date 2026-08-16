@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
@@ -21,6 +22,17 @@ type Inscripcion = {
 };
 
 export default function AdminUsuariosTorneoPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminUsuariosTorneoContenido />
+    </Suspense>
+  );
+}
+
+function AdminUsuariosTorneoContenido() {
+  const searchParams = useSearchParams();
+  const torneoDesdeUrl = searchParams.get("torneo");
+
   const [torneos, setTorneos] = useState<Torneo[]>([]);
   const [torneoId, setTorneoId] = useState<string>("");
 
@@ -49,7 +61,9 @@ export default function AdminUsuariosTorneoPage() {
 
     setTorneos(lista);
 
-    if (lista.length > 0) {
+    if (torneoDesdeUrl && lista.some((t) => t.id === torneoDesdeUrl)) {
+      setTorneoId(torneoDesdeUrl);
+    } else if (lista.length > 0) {
       setTorneoId(lista[0].id);
     } else {
       setLoading(false);

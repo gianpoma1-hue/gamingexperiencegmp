@@ -13,7 +13,6 @@ import {
   FaMoneyBillWave,
   FaCamera,
   FaHeadset,
-  FaUserFriends,
 } from "react-icons/fa";
 
 export default function AdminSidebar() {
@@ -46,11 +45,6 @@ export default function AdminSidebar() {
       icon: <FaClipboardList />,
       title: "Inscripciones",
       href: "/admin/inscripciones",
-    },
-    {
-      icon: <FaUserFriends />,
-      title: "Usuarios del Torneo",
-      href: "/admin/torneos/usuarios",
     },
     {
       icon: <FaCamera />,

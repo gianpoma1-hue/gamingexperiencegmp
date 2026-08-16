@@ -157,6 +157,17 @@ export default function AdminTorneosPage() {
                         Editar
                       </button>
 
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/admin/torneos/usuarios?torneo=${torneo.id}`
+                          )
+                        }
+                        className="bg-zinc-700 hover:bg-zinc-600 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base"
+                      >
+                        Usuarios
+                      </button>
+
                       <button className="bg-yellow-600 hover:bg-yellow-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base">
                         Cerrar
                       </button>

@@ -36,6 +36,12 @@ export async function guardarResultado({
     throw new Error("No se encontró el partido.");
   }
 
+  if (partido.estado === "Finalizado") {
+    throw new Error(
+      "Este partido ya tiene un resultado cargado. No se puede volver a guardar (para evitar que el ranking sume el mismo partido dos veces)."
+    );
+  }
+
   let ganador: string;
   let ganadorCapitan: string | null;
 

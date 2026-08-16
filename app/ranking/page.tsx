@@ -26,6 +26,7 @@ export default function RankingPage() {
   const [players, setPlayers] = useState<RankingPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [modo, setModo] = useState<"individual" | "equipo">("individual");
+  const [rankingFin, setRankingFin] = useState<string | null>(null);
 
   // La modalidad es por torneo, no por juego: cualquier juego puede tener
   // torneos individuales o de equipo. Por eso en la pestaña Individual se
@@ -42,6 +43,15 @@ export default function RankingPage() {
       cargarRanking();
     }
   }, [modo, selectedId]);
+
+  useEffect(() => {
+    supabase
+      .from("configuracion")
+      .select("ranking_fin")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }) => setRankingFin(data?.ranking_fin ?? null));
+  }, []);
 
   function cambiarModo(nuevoModo: "individual" | "equipo") {
     setModo(nuevoModo);
@@ -136,6 +146,18 @@ export default function RankingPage() {
               Competí durante todo el mes, escalá posiciones y conseguí los
               mejores premios de Gaming Experience GMP.
             </p>
+
+            {rankingFin && (
+              <p className="text-red-500 font-bold mt-4 text-sm sm:text-base">
+                🏁 Este ranking finaliza el{" "}
+                {new Date(rankingFin).toLocaleDateString("es-AR", {
+                  timeZone: "UTC",
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            )}
 
           </div>
 

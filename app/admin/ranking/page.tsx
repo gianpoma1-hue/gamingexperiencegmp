@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
@@ -21,8 +21,12 @@ export default function AdminRankingPage() {
   const [loading, setLoading] = useState(true);
   const [reiniciando, setReiniciando] = useState(false);
 
+  const [rankingFin, setRankingFin] = useState("");
+  const [guardandoFecha, setGuardandoFecha] = useState(false);
+
   useEffect(() => {
     cargarRanking();
+    cargarConfiguracion();
   }, []);
 
   async function cargarRanking() {
@@ -43,6 +47,37 @@ export default function AdminRankingPage() {
     }
 
     setLoading(false);
+  }
+
+  async function cargarConfiguracion() {
+    const { data } = await supabase
+      .from("configuracion")
+      .select("ranking_fin")
+      .eq("id", 1)
+      .maybeSingle();
+
+    setRankingFin(data?.ranking_fin ?? "");
+  }
+
+  async function guardarFechaFin() {
+    setGuardandoFecha(true);
+
+    const { error } = await supabase
+      .from("configuracion")
+      .update({
+        ranking_fin: rankingFin || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+
+    setGuardandoFecha(false);
+
+    if (error) {
+      alert("No se pudo guardar la fecha: " + error.message);
+      return;
+    }
+
+    alert("Fecha de fin del ranking actualizada.");
   }
 
   async function reiniciarRanking() {
@@ -118,6 +153,31 @@ export default function AdminRankingPage() {
                 ? "Reiniciando..."
                 : "🔄 Reiniciar Ranking del Mes"}
             </button>
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-6 max-w-xl">
+            <h2 className="font-bold mb-1">Fin del ranking actual</h2>
+            <p className="text-zinc-400 text-sm mb-4">
+              Esta fecha se muestra a los usuarios en la página pública de
+              Ranking, para que sepan hasta cuándo pueden sumar puntos.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="date"
+                value={rankingFin}
+                onChange={(e) => setRankingFin(e.target.value)}
+                className="flex-1 bg-black border border-zinc-700 rounded-xl p-3 outline-none focus:border-red-600"
+              />
+
+              <button
+                onClick={guardarFechaFin}
+                disabled={guardandoFecha}
+                className="bg-red-600 hover:bg-red-700 disabled:opacity-60 px-6 py-3 rounded-xl font-bold whitespace-nowrap"
+              >
+                {guardandoFecha ? "Guardando..." : "Guardar fecha"}
+              </button>
+            </div>
           </div>
 
           {loading ? (
