@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
-import { guardarResultado } from "@/lib/tournament";
+import { guardarResultado, editarResultado } from "@/lib/tournament";
 
 const JUEGOS_CON_GOLES = ["EA SPORTS FC 26"];
 
@@ -64,6 +64,18 @@ export default function AdministrarResultadosPage() {
   }
 
   async function guardar(partido: Partido) {
+    const yaFinalizado = partido.estado === "Finalizado";
+
+    if (yaFinalizado) {
+      const confirmar = window.confirm(
+        "Este partido ya tiene un resultado cargado. ¿Querés corregirlo? Esto va a recalcular el ranking de los jugadores involucrados."
+      );
+
+      if (!confirmar) return;
+    }
+
+    const funcionAGuardar = yaFinalizado ? editarResultado : guardarResultado;
+
     try {
       setGuardando(true);
 
@@ -77,7 +89,7 @@ export default function AdministrarResultadosPage() {
           return;
         }
 
-        await guardarResultado({
+        await funcionAGuardar({
           partidoId: partido.id,
           torneoId: id as string,
           juego,
@@ -87,7 +99,7 @@ export default function AdministrarResultadosPage() {
           penalesJugador2: partido.penales_jugador2,
         });
       } else {
-        const ganador = ganadoresElegidos[partido.id];
+        const ganador = ganadoresElegidos[partido.id] ?? partido.ganador;
 
         if (!ganador) {
           alert("Elegí quién ganó el partido.");
@@ -95,7 +107,7 @@ export default function AdministrarResultadosPage() {
           return;
         }
 
-        await guardarResultado({
+        await funcionAGuardar({
           partidoId: partido.id,
           torneoId: id as string,
           juego,
@@ -105,7 +117,11 @@ export default function AdministrarResultadosPage() {
 
       await cargarTorneoYPartidos();
 
-      alert("Resultado guardado correctamente.");
+      alert(
+        yaFinalizado
+          ? "Resultado corregido correctamente."
+          : "Resultado guardado correctamente."
+      );
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -252,7 +268,9 @@ export default function AdministrarResultadosPage() {
                               }))
                             }
                             className={`rounded-xl py-4 font-bold border transition ${
-                              ganadoresElegidos[partido.id] === jugador
+                              ganadoresElegidos[partido.id] === jugador ||
+                          (!ganadoresElegidos[partido.id] &&
+                            partido.ganador === jugador)
                                 ? "bg-green-700 border-green-500"
                                 : "bg-black border-zinc-700 hover:border-red-600"
                             }`}
@@ -268,9 +286,15 @@ export default function AdministrarResultadosPage() {
                 <button
                   onClick={() => guardar(partido)}
                   disabled={guardando}
-                  className="mt-6 w-full bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold transition disabled:opacity-50"
+                  className={`mt-6 w-full rounded-xl py-3 font-bold transition disabled:opacity-50 ${
+                    partido.estado === "Finalizado"
+                      ? "bg-zinc-700 hover:bg-zinc-600"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
                 >
-                  Guardar Resultado
+                  {partido.estado === "Finalizado"
+                    ? "Corregir Resultado"
+                    : "Guardar Resultado"}
                 </button>
               </div>
             ))}

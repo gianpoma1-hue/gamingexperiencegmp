@@ -200,3 +200,222 @@ export async function guardarResultado({
 
   return ganador;
 }
+
+// ---------------------------------------------------------------------
+// Editar un resultado que YA fue guardado (partido en estado "Finalizado").
+// Revierte las estadísticas del resultado viejo y aplica las del nuevo,
+// para que el ranking no quede desincronizado. Por seguridad, no permite
+// editar si la ronda siguiente ya tiene un resultado cargado (para no
+// romper el resto de la llave sin que el admin se dé cuenta) — en ese
+// caso hay que editar primero (o revertir) los partidos posteriores.
+export async function editarResultado({
+  partidoId,
+  torneoId,
+  juego,
+  golesJugador1,
+  golesJugador2,
+  penalesJugador1,
+  penalesJugador2,
+  ganadorDirecto,
+}: ResultadoPartido) {
+  const { data: partido, error } = await supabase
+    .from("partidos")
+    .select("*")
+    .eq("id", partidoId)
+    .single();
+
+  if (error || !partido) {
+    throw new Error("No se encontró el partido.");
+  }
+
+  if (partido.estado !== "Finalizado") {
+    throw new Error(
+      "Este partido todavía no tiene un resultado cargado. Usá 'Guardar Resultado' en lugar de editar."
+    );
+  }
+
+  // Datos VIEJOS (para revertir el ranking)
+  const ganadorViejo: string = partido.ganador;
+  const golesViejo1 = partido.goles_jugador1;
+  const golesViejo2 = partido.goles_jugador2;
+
+  // Buscar última ronda y si este partido es la final
+  const { data: ultimaRondaData } = await supabase
+    .from("partidos")
+    .select("ronda")
+    .eq("torneo_id", torneoId)
+    .order("ronda", { ascending: false })
+    .limit(1)
+    .single();
+
+  const ultimaRonda = ultimaRondaData?.ronda ?? 1;
+  const esFinal = partido.ronda === ultimaRonda;
+
+  // Chequeo de seguridad: si ya se jugó la ronda siguiente, no dejamos
+  // editar para no romper el cuadro sin que el admin lo note.
+  let siguientePartido: any = null;
+
+  if (!esFinal) {
+    const siguienteRonda = partido.ronda + 1;
+    const siguienteNumero = Math.ceil(partido.numero_partido / 2);
+
+    const { data } = await supabase
+      .from("partidos")
+      .select("*")
+      .eq("torneo_id", torneoId)
+      .eq("ronda", siguienteRonda)
+      .eq("numero_partido", siguienteNumero)
+      .maybeSingle();
+
+    siguientePartido = data;
+
+    if (siguientePartido && siguientePartido.estado === "Finalizado") {
+      throw new Error(
+        "No se puede editar este resultado porque la ronda siguiente ya tiene un resultado cargado. Primero corregí (o volvé a jugar) los partidos posteriores."
+      );
+    }
+  }
+
+  // Calcular el resultado NUEVO con la misma lógica que al guardar
+  let ganador: string;
+  let ganadorCapitan: string | null;
+
+  let golesFinal1: number | null = null;
+  let golesFinal2: number | null = null;
+  let penalesFinal1: number | null = null;
+  let penalesFinal2: number | null = null;
+
+  if (ganadorDirecto) {
+    if (ganadorDirecto !== partido.jugador1 && ganadorDirecto !== partido.jugador2) {
+      throw new Error("El ganador elegido no pertenece a este partido.");
+    }
+
+    ganador = ganadorDirecto;
+    ganadorCapitan =
+      ganador === partido.jugador1
+        ? partido.capitan1 ?? null
+        : partido.capitan2 ?? null;
+  } else {
+    if (golesJugador1 == null || golesJugador2 == null) {
+      throw new Error("Completá ambos resultados.");
+    }
+
+    golesFinal1 = golesJugador1;
+    golesFinal2 = golesJugador2;
+
+    if (golesJugador1 > golesJugador2) {
+      ganador = partido.jugador1;
+      ganadorCapitan = partido.capitan1 ?? null;
+    } else if (golesJugador2 > golesJugador1) {
+      ganador = partido.jugador2;
+      ganadorCapitan = partido.capitan2 ?? null;
+    } else {
+      if (penalesJugador1 == null || penalesJugador2 == null) {
+        throw new Error("Completá los penales.");
+      }
+
+      if (penalesJugador1 === penalesJugador2) {
+        throw new Error("Los penales no pueden empatar.");
+      }
+
+      penalesFinal1 = penalesJugador1;
+      penalesFinal2 = penalesJugador2;
+
+      if (penalesJugador1 > penalesJugador2) {
+        ganador = partido.jugador1;
+        ganadorCapitan = partido.capitan1 ?? null;
+      } else {
+        ganador = partido.jugador2;
+        ganadorCapitan = partido.capitan2 ?? null;
+      }
+    }
+  }
+
+  // Guardar el resultado nuevo
+  const { error: updateError } = await supabase
+    .from("partidos")
+    .update({
+      goles_jugador1: golesFinal1,
+      goles_jugador2: golesFinal2,
+      penales_jugador1: penalesFinal1,
+      penales_jugador2: penalesFinal2,
+      ganador,
+      estado: "Finalizado",
+    })
+    .eq("id", partidoId);
+
+  if (updateError) throw updateError;
+
+  const { data: torneoData } = await supabase
+    .from("torneos")
+    .select("modalidad, juego")
+    .eq("id", torneoId)
+    .single();
+
+  if (torneoData?.modalidad !== "equipo") {
+    // Revertir el resultado viejo del ranking
+    await actualizarRanking({
+      juego: juego ?? torneoData?.juego ?? "",
+      jugador1: partido.jugador1,
+      jugador2: partido.jugador2,
+      ganador: ganadorViejo,
+      golesJugador1: golesViejo1,
+      golesJugador2: golesViejo2,
+      esFinal,
+      signo: -1,
+    });
+
+    // Aplicar el resultado nuevo al ranking
+    await actualizarRanking({
+      juego: juego ?? torneoData?.juego ?? "",
+      jugador1: partido.jugador1,
+      jugador2: partido.jugador2,
+      ganador,
+      golesJugador1: golesFinal1,
+      golesJugador2: golesFinal2,
+      esFinal,
+    });
+  }
+
+  // Si era la final, actualizar el campeón
+  if (esFinal) {
+    const { error: torneoError } = await supabase
+      .from("torneos")
+      .update({
+        estado: "Finalizado",
+        campeon: ganador,
+      })
+      .eq("id", torneoId);
+
+    if (torneoError) throw torneoError;
+
+    return ganador;
+  }
+
+  // Actualizar el ganador en la ronda siguiente (si cambió)
+  if (siguientePartido) {
+    const update: {
+      jugador1?: string;
+      jugador2?: string;
+      capitan1?: string | null;
+      capitan2?: string | null;
+    } = {};
+
+    if (partido.numero_partido % 2 === 1) {
+      update.jugador1 = ganador;
+      update.capitan1 = ganadorCapitan;
+    } else {
+      update.jugador2 = ganador;
+      update.capitan2 = ganadorCapitan;
+    }
+
+    const { error: siguienteError } = await supabase
+      .from("partidos")
+      .update(update)
+      .eq("id", siguientePartido.id);
+
+    if (siguienteError) throw siguienteError;
+  }
+
+  return ganador;
+}
