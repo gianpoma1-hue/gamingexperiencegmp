@@ -72,3 +72,12 @@ export const juegos: Game[] = [
     modalidad: "individual",
   },
 ];
+export const jugadoresPorEquipo: Record<string, number> = {
+  "EA SPORTS FC 26": 1,
+  "Valorant": 5,
+  "League of Legends": 5,
+  "Counter-Strike 2": 5,
+  "Rocket League": 3,
+  "Fortnite": 4,
+  "Truco": 2
+};
