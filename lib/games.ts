@@ -1,4 +1,4 @@
-export type Game = {
+﻿export type Game = {
   id: string;
   nombre: string;
   imagen: string;
@@ -62,25 +62,26 @@ export const juegos: Game[] = [
     imagen: "/images/games/lol.jpg",
     disponible: true,
     ruta: "/torneos/league-of-legends",
-    modalidad: "individual",
+    modalidad: "equipo",
   },
   {
     id: "cs2",
     nombre: "Counter-Strike 2",
     imagen: "/images/games/cs2.jpg",
     disponible: true,
-    ruta: "/torneos/cs2", // <--- AHORA SÍ APUNTA A SU PÁGINA
-    modalidad: "equipo",  // Cambialo a "equipo" si lo juegan en squads (5v5)
+    ruta: "/torneos/cs2",
+    modalidad: "equipo",
   },
 ];
 
-// Cantidad de jugadores por equipo en modalidad "equipo"
 export const JUGADORES_POR_EQUIPO: Record<string, number> = {
   "League of Legends": 5,
   "Counter-Strike 2": 5,
+  "Valorant": 5,
+  "Rocket League": 3,
   "Truco Blyts": 2,
 };
 
 export function jugadoresPorEquipo(nombreJuego: string): number {
-  return JUGADORES_POR_EQUIPO[nombreJuego] ?? 2;
+  return JUGADORES_POR_EQUIPO[nombreJuego] ?? 5;
 }
