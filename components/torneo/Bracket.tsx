@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Trophy } from "lucide-react";
-import RoundColumn from "./RoundColumn";
 import MatchCard from "./MatchCard";
 
 type Partido = {
@@ -42,7 +41,32 @@ type Linea = {
   y1: number;
   x2: number;
   y2: number;
+  completa: boolean;
 };
+
+const ANCHO_CARD = 264;
+const ANCHO_CAMPEON = 232;
+const ORO = "#f5b301";
+const VIOLETA = "#a78bfa";
+
+// Trazo con codo redondeado entre la salida de un partido y la entrada del siguiente.
+function trazo(l: Linea) {
+  const dy = l.y2 - l.y1;
+  if (Math.abs(dy) < 2) return `M ${l.x1} ${l.y1} H ${l.x2}`;
+
+  const mx = l.x1 + (l.x2 - l.x1) / 2;
+  const r = Math.min(10, Math.abs(dy) / 2, Math.abs(mx - l.x1));
+  const s = dy > 0 ? 1 : -1;
+
+  return [
+    `M ${l.x1} ${l.y1}`,
+    `H ${mx - r}`,
+    `Q ${mx} ${l.y1} ${mx} ${l.y1 + s * r}`,
+    `V ${l.y2 - s * r}`,
+    `Q ${mx} ${l.y2} ${mx + r} ${l.y2}`,
+    `H ${l.x2}`,
+  ].join(" ");
+}
 
 export default function Bracket({
   partidos,
@@ -53,87 +77,41 @@ export default function Bracket({
   mostrarReclamar,
   onReclamarPremio,
 }: Props) {
-  const outerRef = useRef<HTMLDivElement>(null);
   const contenidoRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [lineas, setLineas] = useState<Linea[]>([]);
-  const [tamano, setTamano] = useState({ ancho: 0, alto: 0 });
-  const [escala, setEscala] = useState(1);
 
-  // Determina una sola vez, en el cliente, si hay que mostrar la versión
-  // apilada (celular) o la versión con líneas conectoras (escritorio).
-  // Se decide con JS (no solo con clases responsive) para que sea
-  // imposible que las dos versiones queden montadas al mismo tiempo.
+  // Se decide en el cliente si mostramos la llave completa (escritorio)
+  // o las rondas apiladas (celular).
   const [esDesktop, setEsDesktop] = useState<boolean | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
-
     setEsDesktop(mq.matches);
 
     const escuchar = (e: MediaQueryListEvent) => setEsDesktop(e.matches);
-
     mq.addEventListener("change", escuchar);
     return () => mq.removeEventListener("change", escuchar);
   }, []);
 
-  const rondas = partidos.reduce<Record<number, Partido[]>>((acc, partido) => {
-    if (!acc[partido.ronda]) acc[partido.ronda] = [];
-    acc[partido.ronda].push(partido);
+  // ---------- Datos ----------
+  const rondas = partidos.reduce<Record<number, Partido[]>>((acc, p) => {
+    if (!acc[p.ronda]) acc[p.ronda] = [];
+    acc[p.ronda].push(p);
     return acc;
   }, {});
 
   Object.values(rondas).forEach((lista) =>
-    lista.sort(
-      (a, b) => (a.numero_partido ?? 0) - (b.numero_partido ?? 0)
-    )
+    lista.sort((a, b) => (a.numero_partido ?? 0) - (b.numero_partido ?? 0))
   );
 
-  const numerosRonda = Object.keys(rondas).map(Number);
-  const totalRondas =
-    numerosRonda.length > 0 ? Math.max(...numerosRonda) : 0;
-
-  const partidoFinal = rondas[totalRondas]?.[0];
-
-  const rondasPrevias = numerosRonda
-    .filter((r) => r < totalRondas)
+  const rondasOrden = Object.keys(rondas)
+    .map(Number)
     .sort((a, b) => a - b);
 
-  const izquierda: Record<number, Partido[]> = {};
-  const derecha: Record<number, Partido[]> = {};
-
-  rondasPrevias.forEach((r) => {
-    const lista = rondas[r] ?? [];
-    const mitad = Math.ceil(lista.length / 2);
-
-    izquierda[r] = lista.slice(0, mitad);
-    derecha[r] = lista.slice(mitad);
-  });
-
-  function obtenerNombreRonda(ronda: number) {
-    const indice = totalRondas - ronda;
-
-    switch (indice) {
-      case 5:
-        return "32avos de Final";
-      case 4:
-        return "16avos de Final";
-      case 3:
-        return "Octavos de Final";
-      case 2:
-        return "Cuartos de Final";
-      case 1:
-        return "Semifinal";
-      case 0:
-        return "Final";
-      default:
-        return `Ronda ${ronda}`;
-    }
-  }
-
-  const rondasIzqOrden = [...rondasPrevias];
-  const rondasDerOrden = [...rondasPrevias].reverse();
+  const totalRondas = rondasOrden.length > 0 ? Math.max(...rondasOrden) : 0;
+  const partidoFinal = rondas[totalRondas]?.[0];
 
   const subcampeon =
     finalTerminada && partidoFinal && campeon
@@ -142,357 +120,297 @@ export default function Bracket({
         : partidoFinal.jugador1
       : null;
 
-  // 1) Mide el tamaño natural (sin escalar) del contenido y decide
-  // cuánto hay que achicarlo para que entre en el ancho disponible.
-  useEffect(() => {
-    if (!esDesktop) return;
-
-    function medirTamano() {
-      const contenedor = contenidoRef.current;
-      if (!contenedor) return;
-
-      const anchoNatural = contenedor.scrollWidth;
-      const altoNatural = contenedor.scrollHeight;
-
-      setTamano({ ancho: anchoNatural, alto: altoNatural });
-
-      const anchoDisponible =
-        outerRef.current?.clientWidth ?? anchoNatural;
-
-      if (anchoNatural > 0) {
-        const nuevaEscala = Math.min(
-          1,
-          Math.max(0.45, anchoDisponible / anchoNatural)
-        );
-        setEscala(nuevaEscala);
-      }
+  function nombreRonda(ronda: number) {
+    switch (totalRondas - ronda) {
+      case 5:
+        return "32avos de final";
+      case 4:
+        return "16avos de final";
+      case 3:
+        return "Octavos de final";
+      case 2:
+        return "Cuartos de final";
+      case 1:
+        return "Semifinales";
+      case 0:
+        return "Gran final";
+      default:
+        return `Ronda ${ronda}`;
     }
+  }
 
-    const id = requestAnimationFrame(medirTamano);
-    window.addEventListener("resize", medirTamano);
+  // Color del encabezado de cada ronda: final dorada, semis violeta, el resto el color del juego.
+  function colorRonda(ronda: number) {
+    switch (totalRondas - ronda) {
+      case 0:
+        return ORO;
+      case 1:
+        return VIOLETA;
+      default:
+        return "var(--accent)";
+    }
+  }
 
-    return () => {
-      cancelAnimationFrame(id);
-      window.removeEventListener("resize", medirTamano);
-    };
-  }, [partidos, totalRondas, esDesktop]);
+  function encabezadoRonda(ronda: number) {
+    const color = colorRonda(ronda);
+    return (
+      <div
+        className="rounded-md border px-3 py-2 text-center text-xs font-extrabold uppercase tracking-widest"
+        style={{
+          color,
+          borderColor: `color-mix(in srgb, ${color} 35%, transparent)`,
+          background: `color-mix(in srgb, ${color} 10%, transparent)`,
+        }}
+      >
+        {nombreRonda(ronda)}
+      </div>
+    );
+  }
 
-  // 2) Una vez que el achicado (escala) ya se aplicó de verdad en
-  // pantalla, recién ahí medimos dónde quedó cada tarjeta para dibujar
-  // las líneas. Si esto se hiciera antes de aplicar la escala (o con
-  // una escala vieja), las líneas terminan dibujadas en el lugar
-  // equivocado, como se vio con las flechas rotas.
+  function renderCard(p: Partido, numero?: number) {
+    return (
+      <MatchCard
+        id={p.id}
+        torneoId={torneoId}
+        numero={numero}
+        jugador1={p.jugador1 ?? ""}
+        jugador2={p.jugador2 ?? ""}
+        capitan1={p.capitan1 ?? null}
+        capitan2={p.capitan2 ?? null}
+        golesJugador1={p.goles_jugador1}
+        golesJugador2={p.goles_jugador2}
+        penalesJugador1={p.penales_jugador1}
+        penalesJugador2={p.penales_jugador2}
+        ganador={p.ganador ?? null}
+        miUsuario={miUsuario}
+      />
+    );
+  }
+
+  // ---------- Líneas conectoras (solo escritorio) ----------
   useEffect(() => {
     if (!esDesktop) return;
 
-    function calcularLineas() {
-      const contenedor = contenidoRef.current;
-      if (!contenedor) return;
+    const contenedor = contenidoRef.current;
+    if (!contenedor) return;
 
-      const contRect = contenedor.getBoundingClientRect();
+    function calcular() {
+      const cont = contenidoRef.current;
+      if (!cont) return;
+
+      const base = cont.getBoundingClientRect();
       const nuevas: Linea[] = [];
 
-      function medirLinea(
+      function medir(
         origenKey: string,
         destinoKey: string,
-        origenEdge: "left" | "right",
-        destinoEdge: "left" | "right"
+        completa: boolean
       ) {
-        const origen = cardRefs.current[origenKey];
-        const destino = cardRefs.current[destinoKey];
-        if (!origen || !destino) return;
+        const o = cardRefs.current[origenKey];
+        const d = cardRefs.current[destinoKey];
+        if (!o || !d) return;
 
-        const o = origen.getBoundingClientRect();
-        const d = destino.getBoundingClientRect();
+        const ro = o.getBoundingClientRect();
+        const rd = d.getBoundingClientRect();
 
-        // Los rects ya vienen en píxeles de pantalla (post-escala), así
-        // que dividimos por la escala actual para volver a las
-        // coordenadas "naturales" que usa el SVG (que siempre se mide
-        // sin escalar).
-        const x1 =
-          ((origenEdge === "right" ? o.right : o.left) - contRect.left) /
-          escala;
-        const y1 = (o.top + o.height / 2 - contRect.top) / escala;
-
-        const x2 =
-          ((destinoEdge === "right" ? d.right : d.left) - contRect.left) /
-          escala;
-        const y2 = (d.top + d.height / 2 - contRect.top) / escala;
-
-        nuevas.push({ x1, y1, x2, y2 });
-      }
-
-      for (let i = 0; i < rondasIzqOrden.length - 1; i++) {
-        const r = rondasIzqOrden[i];
-        const siguiente = rondasIzqOrden[i + 1];
-
-        (izquierda[r] ?? []).forEach((_, idx) => {
-          medirLinea(
-            `L-${r}-${idx + 1}`,
-            `L-${siguiente}-${Math.ceil((idx + 1) / 2)}`,
-            "right",
-            "left"
-          );
+        nuevas.push({
+          x1: ro.right - base.left,
+          y1: ro.top + ro.height / 2 - base.top,
+          x2: rd.left - base.left,
+          y2: rd.top + rd.height / 2 - base.top,
+          completa,
         });
       }
 
-      for (let i = 0; i < rondasIzqOrden.length - 1; i++) {
-        const r = rondasIzqOrden[i];
-        const siguiente = rondasIzqOrden[i + 1];
+      rondasOrden.forEach((r, i) => {
+        const lista = rondas[r] ?? [];
+        const esUltima = i === rondasOrden.length - 1;
 
-        (derecha[r] ?? []).forEach((_, idx) => {
-          medirLinea(
-            `R-${r}-${idx + 1}`,
-            `R-${siguiente}-${Math.ceil((idx + 1) / 2)}`,
-            "left",
-            "right"
-          );
+        lista.forEach((p, idx) => {
+          const completa = !!p.ganador;
+          const destino = esUltima
+            ? "CAMPEON"
+            : `${rondasOrden[i + 1]}-${Math.floor(idx / 2)}`;
+          medir(`${r}-${idx}`, destino, completa);
         });
-      }
+      });
 
-      const ultimaPrevia = rondasPrevias[rondasPrevias.length - 1];
-
-      if (ultimaPrevia !== undefined) {
-        if ((izquierda[ultimaPrevia] ?? []).length > 0) {
-          medirLinea(`L-${ultimaPrevia}-1`, "FINAL", "right", "left");
-        }
-
-        if ((derecha[ultimaPrevia] ?? []).length > 0) {
-          medirLinea(`R-${ultimaPrevia}-1`, "FINAL", "left", "right");
-        }
-      }
-
+      // Las completas se dibujan al final para quedar por encima.
+      nuevas.sort((a, b) => Number(a.completa) - Number(b.completa));
       setLineas(nuevas);
     }
 
-    // Esperamos dos frames para asegurarnos de que el navegador ya
-    // pintó el nuevo "transform: scale(...)" antes de medir.
-    const id = requestAnimationFrame(() =>
-      requestAnimationFrame(calcularLineas)
-    );
-    window.addEventListener("resize", calcularLineas);
+    const frame = requestAnimationFrame(calcular);
+    const observer = new ResizeObserver(() => calcular());
+    observer.observe(contenedor);
 
     return () => {
-      cancelAnimationFrame(id);
-      window.removeEventListener("resize", calcularLineas);
+      cancelAnimationFrame(frame);
+      observer.disconnect();
     };
-  }, [partidos, totalRondas, esDesktop, escala]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partidos, esDesktop, finalTerminada]);
 
-  const rondasOrdenVertical = [...numerosRonda].sort((a, b) => a - b);
+  // ---------- Tarjeta de campeón ----------
+  function tarjetaCampeon() {
+    return (
+      <div
+        className="w-full rounded-xl border px-5 py-6 text-center"
+        style={{
+          borderColor: `color-mix(in srgb, ${ORO} 40%, transparent)`,
+          background: `linear-gradient(180deg, color-mix(in srgb, ${ORO} 12%, transparent), transparent)`,
+        }}
+      >
+        <div
+          className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border"
+          style={{
+            borderColor: `color-mix(in srgb, ${ORO} 50%, transparent)`,
+            color: ORO,
+          }}
+        >
+          <Trophy size={28} />
+        </div>
 
-  // Todavía no sabemos si es mobile o desktop (primer render en el
-  // servidor) -> no mostramos nada para evitar cualquier parpadeo.
+        <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+          Campeón
+        </p>
+
+        <p
+          className={`mt-1 pb-3 text-xl font-black border-b ${
+            finalTerminada ? "text-white" : "text-zinc-500"
+          }`}
+          style={{ borderColor: `color-mix(in srgb, ${ORO} 40%, transparent)` }}
+        >
+          {finalTerminada && campeon ? campeon : "Por definir"}
+        </p>
+
+        <p className="mt-4 text-xs font-bold uppercase tracking-widest text-zinc-500">
+          Subcampeón
+        </p>
+
+        <p
+          className={`mt-1 text-base font-semibold ${
+            subcampeon ? "text-zinc-300" : "text-zinc-600"
+          }`}
+        >
+          {subcampeon || "Por definir"}
+        </p>
+
+        {mostrarReclamar && (
+          <button
+            onClick={onReclamarPremio}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-3 font-bold text-white transition hover:bg-emerald-500"
+          >
+            <Trophy size={16} />
+            Reclamar mi premio
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Primer render (servidor): no mostramos nada para evitar parpadeos.
   if (esDesktop === null) {
     return <div className="min-h-[200px]" />;
   }
 
+  // ================= CELULAR / TABLET: rondas apiladas =================
   if (!esDesktop) {
     return (
       <div className="space-y-10">
-        {rondasOrdenVertical.map((r) => (
+        {rondasOrden.map((r) => (
           <div key={`mobile-ronda-${r}`}>
-            <h3 className="text-center text-red-500 font-extrabold uppercase tracking-[0.2em] text-sm mb-4">
-              {obtenerNombreRonda(r)}
-            </h3>
+            <div className="mb-4">
+              {encabezadoRonda(r)}
+            </div>
 
-            <div className="space-y-4">
-              {(rondas[r] ?? []).map((partido) => (
-                <MatchCard
-                  key={partido.id}
-                  id={partido.id}
-                  torneoId={torneoId}
-                  jugador1={partido.jugador1 ?? ""}
-                  jugador2={partido.jugador2 ?? ""}
-                  capitan1={partido.capitan1 ?? null}
-                  capitan2={partido.capitan2 ?? null}
-                  golesJugador1={partido.goles_jugador1}
-                  golesJugador2={partido.goles_jugador2}
-                  penalesJugador1={partido.penales_jugador1}
-                  penalesJugador2={partido.penales_jugador2}
-                  ganador={partido.ganador ?? null}
-                  miUsuario={miUsuario}
-                />
+            <div className="space-y-3">
+              {(rondas[r] ?? []).map((p, idx) => (
+                <div key={p.id}>{renderCard(p, idx + 1)}</div>
               ))}
             </div>
           </div>
         ))}
 
-        <div className="flex flex-col items-center w-full rounded-2xl border border-red-600/60 bg-gradient-to-b from-red-950/40 to-zinc-950 px-6 py-8">
-          <div className="rounded-2xl border-2 border-red-600 p-4 mb-4">
-            <Trophy className="text-red-500" size={34} />
-          </div>
-
-          <p className="text-zinc-400 text-xs font-bold tracking-widest">
-            CAMPEÓN
-          </p>
-
-          <p className="text-xl font-black mt-1 text-center border-b-2 border-red-600 pb-2 w-full">
-            {finalTerminada ? campeon : "Por definir"}
-          </p>
-
-          <p className="text-zinc-500 text-xs font-bold tracking-widest mt-4">
-            SUBCAMPEÓN
-          </p>
-
-          <p className="text-base font-bold mt-1 text-center text-zinc-300">
-            {finalTerminada ? subcampeon : "Por definir"}
-          </p>
-
-          {mostrarReclamar && (
-            <button
-              onClick={onReclamarPremio}
-              className="mt-5 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-3 flex items-center justify-center gap-2 transition"
-            >
-              <Trophy size={16} />
-              Reclamar mi premio
-            </button>
-          )}
-        </div>
+        {tarjetaCampeon()}
       </div>
     );
   }
 
-  // ================= DESKTOP: llave completa con líneas conectoras =================
+  // ================= ESCRITORIO: llave de izquierda a derecha =================
   return (
-    <div ref={outerRef} className="w-full overflow-x-auto">
+    <div className="w-full overflow-x-auto pb-2">
       <div
-        style={{
-          height: tamano.alto * escala || undefined,
-        }}
+        ref={contenidoRef}
+        className="relative flex w-max min-w-full items-stretch gap-14"
       >
-        <div
-          ref={contenidoRef}
-          style={{
-            transform: `scale(${escala})`,
-            transformOrigin: "top left",
-          }}
-          className="relative flex items-center justify-center gap-14 w-max py-8"
+        <svg
+          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+          aria-hidden
         >
-          <svg
-            className="absolute inset-0 pointer-events-none"
-            width={tamano.ancho}
-            height={tamano.alto}
+          {lineas.map((l, i) => (
+            <path
+              key={i}
+              d={trazo(l)}
+              fill="none"
+              strokeWidth={2}
+              strokeLinecap="round"
+              stroke={
+                l.completa
+                  ? "color-mix(in srgb, var(--accent) 70%, transparent)"
+                  : "#27272a"
+              }
+            />
+          ))}
+        </svg>
+
+        {rondasOrden.map((r) => (
+          <div
+            key={`ronda-${r}`}
+            className="relative z-10 flex shrink-0 flex-col"
+            style={{ width: ANCHO_CARD }}
           >
-            <defs>
-              <marker
-                id="flecha-bracket"
-                markerWidth="8"
-                markerHeight="8"
-                refX="6"
-                refY="4"
-                orient="auto"
-              >
-                <path d="M0 0 L8 4 L0 8 Z" fill="#dc2626" />
-              </marker>
-            </defs>
+            {encabezadoRonda(r)}
 
-            {lineas.map((l, i) => {
-              const medio = l.x1 + (l.x2 - l.x1) / 2;
-
-              return (
-                <path
-                  key={i}
-                  d={`M ${l.x1} ${l.y1} H ${medio} V ${l.y2} H ${l.x2}`}
-                  stroke="#dc2626"
-                  strokeWidth={2}
-                  fill="none"
-                  markerEnd="url(#flecha-bracket)"
-                />
-              );
-            })}
-          </svg>
-
-          <div className="flex items-center gap-14">
-            {rondasIzqOrden.map((r) => (
-              <div key={`izq-${r}`} className="flex-1 min-w-0 flex justify-center">
-                <RoundColumn
-                  ronda={r}
-                  titulo={obtenerNombreRonda(r)}
-                  partidos={izquierda[r] ?? []}
-                  miUsuario={miUsuario}
-                  torneoId={torneoId}
-                  registrarRef={(n, el) => {
-                    cardRefs.current[`L-${r}-${n}`] = el;
+            <div className="mt-5 flex flex-1 flex-col justify-around gap-5">
+              {(rondas[r] ?? []).map((p, idx) => (
+                <div
+                  key={p.id}
+                  ref={(el) => {
+                    cardRefs.current[`${r}-${idx}`] = el;
                   }}
-                />
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col items-center gap-8 shrink-0 z-10">
-            {partidoFinal && (
-              <div className="flex flex-col items-center">
-                <h2 className="text-center text-red-500 font-extrabold uppercase tracking-[0.25em] mb-8">
-                  Final
-                </h2>
-
-                <div ref={(el) => { cardRefs.current["FINAL"] = el; }}>
-                  <MatchCard
-                    id={partidoFinal.id}
-                    torneoId={torneoId}
-                    jugador1={partidoFinal.jugador1 ?? ""}
-                    jugador2={partidoFinal.jugador2 ?? ""}
-                    capitan1={partidoFinal.capitan1 ?? null}
-                    capitan2={partidoFinal.capitan2 ?? null}
-                    golesJugador1={partidoFinal.goles_jugador1}
-                    golesJugador2={partidoFinal.goles_jugador2}
-                    penalesJugador1={partidoFinal.penales_jugador1}
-                    penalesJugador2={partidoFinal.penales_jugador2}
-                    ganador={partidoFinal.ganador ?? null}
-                    miUsuario={miUsuario}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col items-center w-64 rounded-2xl border border-red-600/60 bg-gradient-to-b from-red-950/40 to-zinc-950 px-6 py-8">
-              <div className="rounded-2xl border-2 border-red-600 p-4 mb-4">
-                <Trophy className="text-red-500" size={34} />
-              </div>
-
-              <p className="text-zinc-400 text-xs font-bold tracking-widest">
-                CAMPEÓN
-              </p>
-
-              <p className="text-xl font-black mt-1 text-center border-b-2 border-red-600 pb-2 w-full">
-                {finalTerminada ? campeon : "Por definir"}
-              </p>
-
-              <p className="text-zinc-500 text-xs font-bold tracking-widest mt-4">
-                SUBCAMPEÓN
-              </p>
-
-              <p className="text-base font-bold mt-1 text-center text-zinc-300">
-                {finalTerminada ? subcampeon : "Por definir"}
-              </p>
-
-              {mostrarReclamar && (
-                <button
-                  onClick={onReclamarPremio}
-                  className="mt-5 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl py-3 flex items-center justify-center gap-2 transition"
                 >
-                  <Trophy size={16} />
-                  Reclamar mi premio
-                </button>
-              )}
+                  {renderCard(p, idx + 1)}
+                </div>
+              ))}
             </div>
           </div>
+        ))}
 
-          <div className="flex items-center gap-14">
-            {rondasDerOrden.map((r) => (
-              <div key={`der-${r}`} className="flex-1 min-w-0 flex justify-center">
-                <RoundColumn
-                  ronda={r}
-                  titulo={obtenerNombreRonda(r)}
-                  partidos={derecha[r] ?? []}
-                  miUsuario={miUsuario}
-                  torneoId={torneoId}
-                  registrarRef={(n, el) => {
-                    cardRefs.current[`R-${r}-${n}`] = el;
-                  }}
-                />
-              </div>
-            ))}
+        <div
+          className="relative z-10 flex shrink-0 flex-col"
+          style={{ width: ANCHO_CAMPEON }}
+        >
+          <div
+            className="rounded-md border px-3 py-2 text-center text-xs font-extrabold uppercase tracking-widest"
+            style={{
+              color: ORO,
+              borderColor: `color-mix(in srgb, ${ORO} 35%, transparent)`,
+              background: `color-mix(in srgb, ${ORO} 10%, transparent)`,
+            }}
+          >
+            Podio
+          </div>
+
+          <div className="mt-5 flex flex-1 items-center">
+            <div
+              className="w-full"
+              ref={(el) => {
+                cardRefs.current["CAMPEON"] = el;
+              }}
+            >
+              {tarjetaCampeon()}
+            </div>
           </div>
         </div>
       </div>

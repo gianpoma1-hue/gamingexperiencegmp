@@ -34,6 +34,7 @@ export default function NuevoTorneoPage() {
   const [hora, setHora] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [estado] = useState("Abierto");
+  const [notificar, setNotificar] = useState(true);
 
   const permiteEquipo = JUEGOS_CON_EQUIPO.includes(juego);
 
@@ -67,6 +68,7 @@ export default function NuevoTorneoPage() {
         hora,
         descripcion,
         estado,
+        notificar,
       });
 
     setGuardando(false);
@@ -234,6 +236,23 @@ export default function NuevoTorneoPage() {
               />
             </div>
 
+            <div className="mt-8">
+              <label className="block mb-3 font-bold">
+                Notificar a los jugadores
+              </label>
+              <select
+                value={notificar ? "si" : "no"}
+                onChange={(e) => setNotificar(e.target.value === "si")}
+                className="w-full bg-black border border-zinc-700 rounded-xl p-4"
+              >
+                <option value="si">Sí, enviar notificación a los jugadores</option>
+                <option value="no">No enviar notificaciones (torneo de prueba)</option>
+              </select>
+              <p className="text-xs text-zinc-500 mt-2">
+                Si elegís "No", los jugadores no reciben el aviso de torneo nuevo.
+              </p>
+            </div>
+
             <div className="flex justify-end gap-5 mt-10">
               <button
                 onClick={() => router.back()}
@@ -247,7 +266,7 @@ export default function NuevoTorneoPage() {
                 className="bg-red-600 hover:bg-red-700 px-8 py-4 rounded-xl font-bold disabled:bg-zinc-700"
               >
                 {guardando ? "Creando..." : "Crear Torneo"}
-              </button>
+            </button>
             </div>
           </div>
         </div>

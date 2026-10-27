@@ -1,21 +1,22 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Gamepad2,
-  Users,
-  Calendar,
   Trophy,
   Clock,
   Wifi,
   HelpCircle,
   AlertTriangle,
+  ChevronRight,
+  Gamepad2,
 } from "lucide-react";
 
 import Navbar from "@/components/layout/Navbar";
 import Bracket from "@/components/torneo/Bracket";
+import ReglasPartido from "@/components/torneo/ReglasPartido";
 import DMChat from "@/components/mensajes/DMChat";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
@@ -56,6 +57,15 @@ interface Partido {
   estado: string;
 }
 
+// Color principal de la llave según el juego. Si no está en la lista, usa el rojo de GMP.
+const ACENTOS: Record<string, string> = {
+  "Counter-Strike 2": "#22d3ee",
+  "EA SPORTS FC 26": "#34d399",
+  "League of Legends": "#60a5fa",
+  "Truco Blyts": "#f59e0b",
+};
+const ACENTO_GMP = "#ef4444";
+
 function formatearFecha(fecha?: string) {
   if (!fecha) return "A definir";
 
@@ -66,9 +76,10 @@ function formatearFecha(fecha?: string) {
       year: "numeric",
       timeZone: "UTC",
     })
-    .replace(".", "")
-    .toUpperCase();
+    .replace(".", "");
 }
+
+type Pestana = "llaves" | "reglas";
 
 export default function LlaveTorneoPage() {
   const params = useParams();
@@ -83,11 +94,13 @@ export default function LlaveTorneoPage() {
   const [inscritos, setInscritos] = useState(0);
   const [miUsuario, setMiUsuario] = useState<string | null>(null);
   const [soporteAbierto, setSoporteAbierto] = useState(false);
+  const [pestana, setPestana] = useState<Pestana>("llaves");
 
   useEffect(() => {
     if (!authLoading) {
       cargarDatos();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading]);
 
   async function cargarDatos() {
@@ -98,7 +111,7 @@ export default function LlaveTorneoPage() {
       .single();
 
     if (torneoError || !torneoData) {
-      alert("No se encontró el torneo.");
+      setLoading(false);
       return;
     }
 
@@ -132,19 +145,42 @@ export default function LlaveTorneoPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        <h1 className="text-4xl font-black">Cargando llave...</h1>
+      <main className="min-h-screen bg-[#07070a] text-white">
+        <Navbar />
+        <div className="pt-32 flex justify-center">
+          <p className="text-zinc-500 text-lg">Cargando llave...</p>
+        </div>
       </main>
     );
   }
 
-  const juegoInfo = juegos.find((j) => j.nombre === torneo?.juego);
+  if (!torneo) {
+    return (
+      <main className="min-h-screen bg-[#07070a] text-white">
+        <Navbar />
+        <div className="max-w-xl mx-auto pt-40 px-6 text-center">
+          <h1 className="text-2xl font-bold">No se encontró el torneo</h1>
+          <p className="text-zinc-400 mt-2">
+            Puede que el enlace sea incorrecto o que el torneo ya no exista.
+          </p>
+          <button
+            onClick={() => router.push("/torneos")}
+            className="mt-6 rounded-lg bg-zinc-800 hover:bg-zinc-700 px-5 py-3 font-semibold transition"
+          >
+            Ver todos los torneos
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  const juegoInfo = juegos.find((j) => j.nombre === torneo.juego);
   const rutaVolver = juegoInfo?.ruta ?? "/torneos";
 
-  const formato = torneo?.modalidad === "equipo" ? "2 vs 2" : "1 vs 1";
+  const esEquipo = torneo.modalidad === "equipo";
+  const formato = esEquipo ? "2 vs 2" : "1 vs 1";
 
-  const finalTerminada =
-    torneo?.estado === "Finalizado" && !!torneo?.campeon;
+  const finalTerminada = torneo.estado === "Finalizado" && !!torneo.campeon;
 
   const ultimaRonda =
     partidos.length > 0 ? Math.max(...partidos.map((p) => p.ronda)) : 0;
@@ -155,7 +191,7 @@ export default function LlaveTorneoPage() {
     !!miUsuario &&
     finalTerminada &&
     !!partidoFinal &&
-    partidoFinal.ganador === torneo?.campeon &&
+    partidoFinal.ganador === torneo.campeon &&
     [
       partidoFinal.jugador1,
       partidoFinal.jugador2,
@@ -163,355 +199,266 @@ export default function LlaveTorneoPage() {
       partidoFinal.capitan2,
     ].includes(miUsuario);
 
-  const esTrucoBlyts = torneo?.juego === "Truco Blyts";
-  const esFC26 = torneo?.juego === "EA SPORTS FC 26";
+  const esTrucoBlyts = torneo.juego === "Truco Blyts";
+  const esFC26 = torneo.juego === "EA SPORTS FC 26";
+  const hayReglasEspeciales = esTrucoBlyts || esFC26;
+  const mostrarAvisoReglas =
+    !!miUsuario && partidos.length > 0 && hayReglasEspeciales;
+
+  const acento = ACENTOS[torneo.juego] ?? ACENTO_GMP;
+
+  const estiloPagina = {
+    "--accent": acento,
+  } as CSSProperties;
+
+  const estiloHero: CSSProperties = {
+    backgroundImage: [
+      "linear-gradient(90deg, #07070a 8%, rgba(7,7,10,0.82) 48%, rgba(7,7,10,0.45) 100%)",
+      `radial-gradient(circle at 85% 20%, color-mix(in srgb, ${acento} 22%, transparent), transparent 55%)`,
+      juegoInfo ? `url(${juegoInfo.imagen})` : "none",
+    ].join(", "),
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main
+      className="min-h-screen bg-[#07070a] text-white"
+      style={estiloPagina}
+    >
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 lg:pt-28 pb-16">
+      {/* HERO */}
+      <section
+        className="relative pt-16 lg:pt-20 border-b border-zinc-800"
+        style={estiloHero}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-10 lg:pt-12 lg:pb-14">
+          <button
+            onClick={() => router.push(rutaVolver)}
+            className="flex items-center gap-2 text-zinc-400 hover:text-white transition mb-8 text-sm font-semibold"
+          >
+            <ArrowLeft size={16} />
+            Volver al torneo
+          </button>
 
-        <button
-          onClick={() => router.push(rutaVolver)}
-          className="flex items-center gap-2 text-zinc-400 hover:text-white transition mb-8 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} />
-          VOLVER AL TORNEO
-        </button>
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div className="min-w-0">
+              <span
+                className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold"
+                style={{
+                  color: "var(--accent)",
+                  borderColor:
+                    "color-mix(in srgb, var(--accent) 40%, transparent)",
+                  background:
+                    "color-mix(in srgb, var(--accent) 10%, transparent)",
+                }}
+              >
+                <Gamepad2 size={14} />
+                {torneo.juego} · {formato}
+              </span>
 
-        <h1 className="text-5xl font-black">
-          <span className="text-red-600">LLAVES</span> DEL TORNEO
-        </h1>
+              <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-black italic leading-[1.05] tracking-tight break-words">
+                {torneo.nombre}
+              </h1>
 
-        <p className="text-zinc-400 mt-3 text-lg">
-          Seguí el progreso de los mejores {torneo?.modalidad === "equipo" ? "equipos" : "JUGADORES"} en su camino al título.
-        </p>
-
-        {miUsuario && partidos.length > 0 && (esTrucoBlyts || esFC26) && (
-          <div className="mt-8 rounded-2xl border-2 border-yellow-500/60 bg-yellow-500/5 px-4 sm:px-8 py-6">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertTriangle className="text-yellow-500 shrink-0" size={24} />
-              <h2 className="text-xl font-black tracking-wide text-yellow-500">
-                IMPORTANTE — LECTURA OBLIGATORIA
-              </h2>
+              <p className="mt-4 max-w-xl text-zinc-400 text-base lg:text-lg">
+                Seguí el progreso de los mejores{" "}
+                {esEquipo ? "equipos" : "jugadores"} en su camino al título.
+              </p>
             </div>
 
-            {esTrucoBlyts && (
-              <ul className="space-y-3 text-zinc-300 leading-7">
-                <li className="flex gap-3">
-                  <span className="text-yellow-500 font-bold">1.</span>
-                  <span>
-                    Contactate con tu rival desde el{" "}
-                    <span className="font-semibold text-white">
-                      chat del partido
-                    </span>
-                    , intercambien su ID de Truco Blyts y agréguense.
-                  </span>
-                </li>
+            <dl className="grid grid-cols-3 shrink-0 divide-x divide-zinc-800 rounded-xl border border-zinc-800 bg-black/50 backdrop-blur-sm">
+              <div className="px-5 py-4">
+                <dt className="text-xs text-zinc-500">Premio</dt>
+                <dd className="mt-1 text-xl font-black text-yellow-400">
+                  ${torneo.premio?.toLocaleString("es-AR")}
+                </dd>
+              </div>
 
-                <li className="flex gap-3">
-                  <span className="text-yellow-500 font-bold">2.</span>
-                  <span>
-                    Una vez confirmada la ronda, ambos jugadores dispondrán
-                    de un máximo de{" "}
-                    <span className="font-semibold text-white">
-                      10 minutos
-                    </span>{" "}
-                    para iniciar la partida. Si un jugador no se presenta
-                    dentro de ese plazo, perderá el encuentro.
-                  </span>
-                </li>
+              <div className="px-5 py-4">
+                <dt className="text-xs text-zinc-500">
+                  {esEquipo ? "Equipos" : "Jugadores"}
+                </dt>
+                <dd
+                  className="mt-1 text-xl font-black"
+                  style={{ color: "var(--accent)" }}
+                >
+                  {inscritos} / {torneo.jugadores_max}
+                </dd>
+              </div>
 
-                <li className="flex gap-3">
-                  <span className="text-yellow-500 font-bold">3.</span>
-                  <span>
-                    El jugador que cree la partida deberá configurarla a{" "}
-                    <span className="font-semibold text-white">
-                      30 puntos y sin flor
-                    </span>
-                    .
-                  </span>
-                </li>
+              <div className="px-5 py-4">
+                <dt className="text-xs text-zinc-500">Inicio</dt>
+                <dd className="mt-1 text-xl font-black whitespace-nowrap">
+                  {formatearFecha(torneo.fecha)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
 
-                <li className="flex gap-3">
-                  <span className="text-yellow-500 font-bold">4.</span>
-                  <span>
-                    Al finalizar el partido, ambos jugadores deberán
-                    reportar el{" "}
-                    <span className="font-semibold text-white">
-                      mismo resultado
-                    </span>
-                    . Si hay diferencias, el ganador deberá presentar una
-                    captura del resultado final.
-                  </span>
-                </li>
+      {/* PESTAÑAS */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div
+          role="tablist"
+          className="flex gap-8 border-b border-zinc-800"
+        >
+          {(
+            [
+              ["llaves", "Llaves"],
+              ["reglas", "Reglas y soporte"],
+            ] as [Pestana, string][]
+          ).map(([clave, texto]) => {
+            const activa = pestana === clave;
+            return (
+              <button
+                key={clave}
+                role="tab"
+                aria-selected={activa}
+                onClick={() => setPestana(clave)}
+                className={`relative py-4 text-sm font-bold transition ${
+                  activa ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                {texto}
+                {activa && (
+                  <span
+                    className="absolute inset-x-0 -bottom-px h-0.5"
+                    style={{ background: "var(--accent)" }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-                <li className="flex gap-3">
-                  <span className="text-yellow-500 font-bold">5.</span>
-                  <span>
-                    Si un jugador se desconecta, la partida deberá
-                    continuar respetando el marcador. Si el rival no se
-                    reconecta dentro de los{" "}
-                    <span className="font-semibold text-white">
-                      5 minutos
-                    </span>
-                    , el jugador que permaneció en la partida será
-                    declarado ganador.
-                  </span>
-                </li>
-              </ul>
+        {pestana === "llaves" && (
+          <div className="py-8 lg:py-10">
+            {mostrarAvisoReglas && (
+              <button
+                onClick={() => setPestana("reglas")}
+                className="mb-8 flex w-full items-center gap-3 rounded-xl border border-yellow-500/40 bg-yellow-500/[0.05] px-4 py-3 text-left transition hover:bg-yellow-500/10"
+              >
+                <AlertTriangle className="text-yellow-500 shrink-0" size={20} />
+                <span className="flex-1 text-sm text-zinc-300">
+                  <span className="font-bold text-yellow-500">
+                    Lectura obligatoria:
+                  </span>{" "}
+                  antes de jugar, revisá cómo se coordina, se configura y se
+                  reporta cada partido.
+                </span>
+                <ChevronRight className="text-yellow-500 shrink-0" size={18} />
+              </button>
             )}
 
-            {esFC26 && (
-              <div className="space-y-6 text-zinc-300 leading-7">
-                <div>
-                  <p className="text-sm font-black uppercase tracking-wide text-yellow-500 mb-3">
-                    Antes de jugar
-                  </p>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="flex items-center gap-3 text-2xl font-black">
+                <Trophy size={22} className="text-yellow-400" />
+                Cuadro del torneo
+              </h2>
 
-                  <ul className="space-y-3">
-                    <li className="flex gap-3">
-                      <span>💬</span>
-                      <span>
-                        Utilizá el{" "}
-                        <span className="font-semibold text-white">
-                          chat del partido
-                        </span>{" "}
-                        con tu rival para coordinar el horario e
-                        intercambiar el ID de EA SPORTS FC 26.
-                      </span>
-                    </li>
+              <span className="rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400">
+                Eliminación directa · {torneo.jugadores_max}{" "}
+                {esEquipo ? "equipos" : "jugadores"}
+              </span>
+            </div>
 
-                    <li className="flex gap-3">
-                      <span>🎮</span>
-                      <span>
-                        El partido deberá jugarse en el modo{" "}
-                        <span className="font-semibold text-white">
-                          "Amistoso Online" (Online Friendlies)
-                        </span>
-                        , agregando previamente a tu rival como amigo.
-                      </span>
-                    </li>
+            {partidos.length === 0 ? (
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-10 text-center">
+                <h3 className="text-xl font-bold">
+                  Todavía no hay partidos generados.
+                </h3>
+                <p className="mt-2 text-zinc-500 text-sm">
+                  La llave aparece acá cuando la organización arme los cruces.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 sm:p-6 lg:p-8">
+                <Bracket
+                  jugadoresMax={torneo.jugadores_max}
+                  miUsuario={miUsuario}
+                  torneoId={id}
+                  finalTerminada={finalTerminada}
+                  campeon={torneo.campeon}
+                  mostrarReclamar={soyCampeon}
+                  onReclamarPremio={() => setSoporteAbierto(true)}
+                  partidos={partidos.map((p) => ({
+                    id: p.id,
+                    ronda: p.ronda,
+                    numero_partido: p.numero_partido,
 
-                    <li className="flex gap-3">
-                      <span>⚽</span>
-                      <div>
-                        <span>
-                          El jugador que cree la partida deberá configurar
-                          obligatoriamente:
-                        </span>
+                    jugador1: p.jugador1,
+                    jugador2: p.jugador2,
 
-                        <ul className="mt-2 ml-1 space-y-1 list-disc list-inside text-zinc-300">
-                          <li>Duración de cada tiempo: 6 minutos.</li>
-                          <li>Velocidad de juego: Normal.</li>
-                          <li>Lesiones: Desactivadas.</li>
-                          <li>Mano: Desactivada.</li>
-                          <li>Plantillas: Actualizadas.</li>
-                        </ul>
-                      </div>
-                    </li>
+                    capitan1: p.capitan1,
+                    capitan2: p.capitan2,
 
-                    <li className="flex gap-3">
-                      <span>⏱️</span>
-                      <span>
-                        Si el partido termina empatado, deberá disputarse la
-                        prórroga. Si el empate persiste al finalizar la
-                        prórroga, el ganador se definirá mediante la tanda
-                        de penales.
-                      </span>
-                    </li>
-                  </ul>
-                </div>
+                    goles_jugador1: p.goles_jugador1,
+                    goles_jugador2: p.goles_jugador2,
 
-                <div>
-                  <p className="text-sm font-black uppercase tracking-wide text-yellow-500 mb-3">
-                    Al finalizar el partido
-                  </p>
+                    penales_jugador1: p.penales_jugador1,
+                    penales_jugador2: p.penales_jugador2,
 
-                  <ul className="space-y-3">
-                    <li className="flex gap-3">
-                      <span>📝</span>
-                      <span>
-                        Ambos jugadores deberán ingresar al apartado{" "}
-                        <span className="font-semibold text-white">
-                          "Reportar resultado"
-                        </span>{" "}
-                        y cargar exactamente el mismo resultado del
-                        partido.
-                      </span>
-                    </li>
-
-                    <li className="flex gap-3">
-                      <span>📸</span>
-                      <span>
-                        Si los resultados informados son diferentes o existe
-                        algún inconveniente, el ganador deberá presentar una
-                        captura de pantalla del resultado final del partido
-                        como comprobante.
-                      </span>
-                    </li>
-
-                    <li className="flex gap-3">
-                      <span>🔌</span>
-                      <span>
-                        Si a alguno de los jugadores se le corta la
-                        conexión durante el partido, este debe continuar
-                        respetando el marcador en el que quedó al momento
-                        del corte (se recomienda sacar una captura de
-                        pantalla de ese marcador como respaldo). Al
-                        finalizar, ambos jugadores deben reportar el
-                        resultado adjuntando sus capturas correspondientes.
-                        Si el rival abandona el partido y pasan más de{" "}
-                        <span className="font-semibold text-white">
-                          5 minutos
-                        </span>{" "}
-                        sin que se reconecte, el jugador que permaneció en
-                        el partido será declarado ganador.
-                      </span>
-                    </li>
-                  </ul>
-                </div>
+                    ganador: p.ganador,
+                  }))}
+                />
               </div>
             )}
           </div>
         )}
 
-        {/* INFO BAR */}
-        <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 sm:px-8 py-6 flex flex-wrap gap-y-6 gap-x-10">
+        {pestana === "reglas" && (
+          <div className="py-8 lg:py-10 space-y-8">
+            {hayReglasEspeciales && (
+              <ReglasPartido esTrucoBlyts={esTrucoBlyts} esFC26={esFC26} />
+            )}
 
-          <div className="flex items-center gap-3">
-            <Gamepad2 className="text-zinc-500" size={22} />
-            <div>
-              <p className="text-zinc-500 text-xs uppercase tracking-wide">
-                Juego
-              </p>
-              <p className="font-bold">{torneo?.juego}</p>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 flex gap-4">
+                <Clock className="text-zinc-500 shrink-0" size={24} />
+                <div>
+                  <p className="font-bold mb-1">Horarios</p>
+                  <p className="text-zinc-400 text-sm">
+                    Los horarios son definidos por la organización.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 flex gap-4">
+                <Wifi className="text-zinc-500 shrink-0" size={24} />
+                <div>
+                  <p className="font-bold mb-1">Desconexiones</p>
+                  <p className="text-zinc-400 text-sm">
+                    Ver reglamento para más información.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 flex gap-4">
+                <HelpCircle className="text-zinc-500 shrink-0" size={24} />
+                <div>
+                  <p className="font-bold mb-1">¿Dudas?</p>
+                  <p className="text-zinc-400 text-sm">
+                    Contactanos por nuestras redes.
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Users className="text-zinc-500" size={22} />
-            <div>
-              <p className="text-zinc-500 text-xs uppercase tracking-wide">
-                Formato
-              </p>
-              <p className="font-bold">{formato}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Calendar className="text-zinc-500" size={22} />
-            <div>
-              <p className="text-zinc-500 text-xs uppercase tracking-wide">
-                Inicio
-              </p>
-              <p className="font-bold">{formatearFecha(torneo?.fecha)}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Trophy className="text-zinc-500" size={22} />
-            <div>
-              <p className="text-zinc-500 text-xs uppercase tracking-wide">
-                Premio
-              </p>
-              <p className="font-bold">
-                ${torneo?.premio?.toLocaleString("es-AR")}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Users className="text-zinc-500" size={22} />
-            <div>
-              <p className="text-zinc-500 text-xs uppercase tracking-wide">
-                {formato === "2 vs 2" ? "Equipos" : "Jugadores"}
-              </p>
-              <p className="font-bold">
-                {inscritos} / {torneo?.jugadores_max}
-              </p>
-            </div>
-          </div>
-
-        </div>
-
-        {/* LLAVE */}
-        {partidos.length === 0 ? (
-          <div className="mt-10 bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center">
-            <h2 className="text-2xl font-bold">
-              Todavía no hay partidos generados.
-            </h2>
-          </div>
-        ) : (
-          <div className="mt-10 rounded-3xl border border-zinc-800 bg-zinc-950/60 p-8">
-            <Bracket
-              jugadoresMax={torneo!.jugadores_max}
-              miUsuario={miUsuario}
-              torneoId={id}
-              finalTerminada={finalTerminada}
-              campeon={torneo?.campeon}
-              mostrarReclamar={soyCampeon}
-              onReclamarPremio={() => setSoporteAbierto(true)}
-              partidos={partidos.map((p) => ({
-                id: p.id,
-                ronda: p.ronda,
-                numero_partido: p.numero_partido,
-
-                jugador1: p.jugador1,
-                jugador2: p.jugador2,
-
-                capitan1: p.capitan1,
-                capitan2: p.capitan2,
-
-                goles_jugador1: p.goles_jugador1,
-                goles_jugador2: p.goles_jugador2,
-
-                penales_jugador1: p.penales_jugador1,
-                penales_jugador2: p.penales_jugador2,
-
-                ganador: p.ganador,
-              }))}
-            />
+            <button
+              onClick={() => router.push("/reglamento")}
+              className="flex items-center gap-2 rounded-lg border border-zinc-700 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:bg-zinc-800"
+            >
+              Ver reglamento completo
+              <ChevronRight size={16} />
+            </button>
           </div>
         )}
-
-        {/* FOOTER INFO */}
-        <div className="mt-8 grid md:grid-cols-3 gap-6">
-
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 flex gap-4">
-            <Clock className="text-zinc-500 shrink-0" size={26} />
-            <div>
-              <p className="font-bold mb-1">Horarios</p>
-              <p className="text-zinc-400 text-sm">
-                Los horarios son definidos por la organización.
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 flex gap-4">
-            <Wifi className="text-zinc-500 shrink-0" size={26} />
-            <div>
-              <p className="font-bold mb-1">Desconexiones</p>
-              <p className="text-zinc-400 text-sm">
-                Ver reglamento para más información.
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 flex gap-4">
-            <HelpCircle className="text-zinc-500 shrink-0" size={26} />
-            <div>
-              <p className="font-bold mb-1">¿Dudas?</p>
-              <p className="text-zinc-400 text-sm">
-                Contactanos por nuestras redes.
-              </p>
-            </div>
-          </div>
-
-        </div>
-
       </div>
+
+      <div className="pb-16" />
 
       {soporteAbierto && miUsuario && (
         <DMChat
