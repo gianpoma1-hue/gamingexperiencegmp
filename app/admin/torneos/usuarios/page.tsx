@@ -18,6 +18,7 @@ type Inscripcion = {
   id: string;
   nombre: string;
   usuario: string;
+  equipo?: string | null;
   estado_pago: "pendiente" | "confirmado" | "rechazado";
 };
 
@@ -75,7 +76,7 @@ function AdminUsuariosTorneoContenido() {
 
     const { data, error } = await supabase
       .from("inscripciones")
-      .select("id, nombre, usuario, estado_pago")
+      .select("id, nombre, usuario, equipo, estado_pago")
       .eq("torneo_id", idTorneo)
       .order("nombre", { ascending: true });
 
@@ -271,6 +272,16 @@ function AdminUsuariosTorneoContenido() {
                             ({i.usuario})
                           </span>
                         </p>
+
+                        {i.equipo && (
+                          <p className="mt-1 mb-2 flex items-center gap-2 text-sm text-zinc-300">
+                            <Users size={14} className="text-red-500 shrink-0" />
+                            <span className="text-zinc-500">Equipo:</span>
+                            <span className="font-semibold text-white">
+                              {i.equipo}
+                            </span>
+                          </p>
+                        )}
 
                         <span
                           className={`text-xs font-bold px-2 py-0.5 rounded-full ${

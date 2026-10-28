@@ -76,7 +76,8 @@ function formatearFecha(fecha?: string) {
       year: "numeric",
       timeZone: "UTC",
     })
-    .replace(".", "");
+    .replace(".", "")
+    .replace(/ de /g, " ");
 }
 
 type Pestana = "llaves" | "reglas";
@@ -201,7 +202,8 @@ export default function LlaveTorneoPage() {
 
   const esTrucoBlyts = torneo.juego === "Truco Blyts";
   const esFC26 = torneo.juego === "EA SPORTS FC 26";
-  const hayReglasEspeciales = esTrucoBlyts || esFC26;
+  const esCS2 = torneo.juego === "Counter-Strike 2";
+  const hayReglasEspeciales = esTrucoBlyts || esFC26 || esCS2;
   const mostrarAvisoReglas =
     !!miUsuario && partidos.length > 0 && hayReglasEspeciales;
 
@@ -268,29 +270,29 @@ export default function LlaveTorneoPage() {
               </p>
             </div>
 
-            <dl className="grid grid-cols-3 shrink-0 divide-x divide-zinc-800 rounded-xl border border-zinc-800 bg-black/50 backdrop-blur-sm">
-              <div className="px-5 py-4">
+            <dl className="grid w-full grid-cols-[repeat(3,minmax(0,1fr))] divide-x divide-zinc-800 rounded-xl border border-zinc-800 bg-black/50 backdrop-blur-sm lg:w-auto lg:shrink-0">
+              <div className="min-w-0 px-3 py-3 sm:px-5 sm:py-4">
                 <dt className="text-xs text-zinc-500">Premio</dt>
-                <dd className="mt-1 text-xl font-black text-yellow-400">
+                <dd className="mt-1 text-base sm:text-xl font-black text-yellow-400">
                   ${torneo.premio?.toLocaleString("es-AR")}
                 </dd>
               </div>
 
-              <div className="px-5 py-4">
+              <div className="min-w-0 px-3 py-3 sm:px-5 sm:py-4">
                 <dt className="text-xs text-zinc-500">
                   {esEquipo ? "Equipos" : "Jugadores"}
                 </dt>
                 <dd
-                  className="mt-1 text-xl font-black"
+                  className="mt-1 text-base sm:text-xl font-black"
                   style={{ color: "var(--accent)" }}
                 >
                   {inscritos} / {torneo.jugadores_max}
                 </dd>
               </div>
 
-              <div className="px-5 py-4">
+              <div className="min-w-0 px-3 py-3 sm:px-5 sm:py-4">
                 <dt className="text-xs text-zinc-500">Inicio</dt>
-                <dd className="mt-1 text-xl font-black whitespace-nowrap">
+                <dd className="mt-1 text-sm sm:text-xl font-black leading-tight">
                   {formatearFecha(torneo.fecha)}
                 </dd>
               </div>
@@ -412,7 +414,11 @@ export default function LlaveTorneoPage() {
         {pestana === "reglas" && (
           <div className="py-8 lg:py-10 space-y-8">
             {hayReglasEspeciales && (
-              <ReglasPartido esTrucoBlyts={esTrucoBlyts} esFC26={esFC26} />
+              <ReglasPartido
+                esTrucoBlyts={esTrucoBlyts}
+                esFC26={esFC26}
+                esCS2={esCS2}
+              />
             )}
 
             <div className="grid md:grid-cols-3 gap-4">
