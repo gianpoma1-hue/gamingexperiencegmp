@@ -5,13 +5,14 @@ import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
-import { UserPlus, UserX, Users } from "lucide-react";
+import { Check, ImagePlus, Pencil, Trash2, UserPlus, UserX, Users, X } from "lucide-react";
 
 type Torneo = {
   id: string;
   nombre: string;
   juego: string;
   jugadores_max: number;
+  modalidad?: "individual" | "equipo";
 };
 
 type Inscripcion = {
@@ -19,6 +20,7 @@ type Inscripcion = {
   nombre: string;
   usuario: string;
   equipo?: string | null;
+  escudo_url?: string | null;
   estado_pago: "pendiente" | "confirmado" | "rechazado";
 };
 
@@ -43,6 +45,12 @@ function AdminUsuariosTorneoContenido() {
 
   const [usuarioNuevo, setUsuarioNuevo] = useState("");
   const [agregando, setAgregando] = useState(false);
+  const [subiendoEscudoId, setSubiendoEscudoId] = useState<string | null>(null);
+
+  const [equipoNuevo, setEquipoNuevo] = useState("");
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [nombreEditando, setNombreEditando] = useState("");
+  const [guardandoNombre, setGuardandoNombre] = useState(false);
 
   useEffect(() => {
     cargarTorneos();
@@ -55,7 +63,7 @@ function AdminUsuariosTorneoContenido() {
   async function cargarTorneos() {
     const { data } = await supabase
       .from("torneos")
-      .select("id, nombre, juego, jugadores_max")
+      .select("id, nombre, juego, jugadores_max, modalidad")
       .order("fecha", { ascending: false });
 
     const lista = (data as Torneo[]) || [];
@@ -76,7 +84,7 @@ function AdminUsuariosTorneoContenido() {
 
     const { data, error } = await supabase
       .from("inscripciones")
-      .select("id, nombre, usuario, equipo, estado_pago")
+      .select("*")
       .eq("torneo_id", idTorneo)
       .order("nombre", { ascending: true });
 
@@ -86,6 +94,194 @@ function AdminUsuariosTorneoContenido() {
 
     setCargandoLista(false);
     setLoading(false);
+  }
+
+  // Actualiza una inscripción y avisa si Supabase no dejó guardar el cambio.
+  // (Cuando faltan permisos, Supabase no da error: simplemente no modifica nada.)
+  async function actualizarInscripcion(
+    inscripcionId: string,
+    cambios: { escudo_url?: string | null; equipo?: string | null }
+  ): Promise<boolean> {
+    const { data, error } = await supabase
+      .from("inscripciones")
+      .update(cambios)
+      .eq("id", inscripcionId)
+      .select("id");
+
+    if (error) {
+      alert("No se pudo guardar el cambio: " + error.message);
+      return false;
+    }
+
+    if (!data || data.length === 0) {
+      alert(
+        "Supabase no permitió modificar esta inscripción (falta el permiso de admin). Ejecutá el SQL \"permisos-admin-inscripciones\" en Supabase y probá de nuevo."
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  function empezarEdicionNombre(i: Inscripcion) {
+    setEditandoId(i.id);
+    setNombreEditando(i.equipo ?? "");
+  }
+
+  async function guardarNombreEquipo(i: Inscripcion) {
+    const nuevo = nombreEditando.trim();
+
+    if (!nuevo) {
+      alert("Ingresá un nombre para el equipo.");
+      return;
+    }
+
+    if (nuevo === (i.equipo ?? "")) {
+      setEditandoId(null);
+      return;
+    }
+
+    const repetido = inscripciones.some(
+      (x) =>
+        x.id !== i.id &&
+        (x.equipo ?? x.usuario).toLowerCase() === nuevo.toLowerCase()
+    );
+
+    if (repetido) {
+      alert("Ya hay otro equipo con ese nombre en este torneo.");
+      return;
+    }
+
+    setGuardandoNombre(true);
+
+    // En los partidos el equipo figura con su nombre de equipo,
+    // o con su usuario si todavía no tenía nombre.
+    const nombreViejo = i.equipo ?? i.usuario;
+
+    const ok = await actualizarInscripcion(i.id, { equipo: nuevo });
+
+    if (!ok) {
+      setGuardandoNombre(false);
+      return;
+    }
+
+    // Si la llave ya está armada, actualizamos el nombre también ahí.
+    const resultados = await Promise.all([
+      supabase
+        .from("partidos")
+        .update({ jugador1: nuevo })
+        .eq("torneo_id", torneoId)
+        .eq("jugador1", nombreViejo),
+      supabase
+        .from("partidos")
+        .update({ jugador2: nuevo })
+        .eq("torneo_id", torneoId)
+        .eq("jugador2", nombreViejo),
+      supabase
+        .from("partidos")
+        .update({ ganador: nuevo })
+        .eq("torneo_id", torneoId)
+        .eq("ganador", nombreViejo),
+      supabase
+        .from("torneos")
+        .update({ campeon: nuevo })
+        .eq("id", torneoId)
+        .eq("campeon", nombreViejo),
+    ]);
+
+    const falla = resultados.find((r) => r.error);
+
+    if (falla?.error) {
+      alert(
+        "Se guardó el nombre, pero no se pudo actualizar en la llave: " +
+          falla.error.message
+      );
+    }
+
+    setInscripciones((prev) =>
+      prev.map((x) => (x.id === i.id ? { ...x, equipo: nuevo } : x))
+    );
+
+    setGuardandoNombre(false);
+    setEditandoId(null);
+  }
+
+  async function subirEscudo(inscripcion: Inscripcion, archivo: File | undefined) {
+    if (!archivo) return;
+
+    if (!archivo.type.startsWith("image/")) {
+      alert("Elegí un archivo de imagen (PNG, JPG, WEBP...).");
+      return;
+    }
+
+    if (archivo.size > 5 * 1024 * 1024) {
+      alert("La imagen no puede pesar más de 5MB.");
+      return;
+    }
+
+    setSubiendoEscudoId(inscripcion.id);
+
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const adminId = authData.user?.id;
+
+      if (!adminId) {
+        alert("Tu sesión venció. Volvé a iniciar sesión.");
+        return;
+      }
+
+      const extension = archivo.name.split(".").pop() || "png";
+      const ruta = `${adminId}/escudo-${inscripcion.id}-${Date.now()}.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(ruta, archivo, { upsert: true });
+
+      if (uploadError) {
+        alert("No se pudo subir el escudo: " + uploadError.message);
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(ruta);
+
+      const nuevaUrl = publicUrlData.publicUrl;
+
+      const guardado = await actualizarInscripcion(inscripcion.id, {
+        escudo_url: nuevaUrl,
+      });
+
+      if (!guardado) return;
+
+      setInscripciones((prev) =>
+        prev.map((x) =>
+          x.id === inscripcion.id ? { ...x, escudo_url: nuevaUrl } : x
+        )
+      );
+    } finally {
+      setSubiendoEscudoId(null);
+    }
+  }
+
+  async function quitarEscudo(inscripcion: Inscripcion) {
+    const confirmar = window.confirm(
+      `¿Sacar el escudo del equipo "${inscripcion.equipo ?? inscripcion.nombre}"?`
+    );
+
+    if (!confirmar) return;
+
+    const guardado = await actualizarInscripcion(inscripcion.id, {
+      escudo_url: null,
+    });
+
+    if (!guardado) return;
+
+    setInscripciones((prev) =>
+      prev.map((x) =>
+        x.id === inscripcion.id ? { ...x, escudo_url: null } : x
+      )
+    );
   }
 
   async function quitarUsuario(inscripcion: Inscripcion) {
@@ -142,6 +338,22 @@ function AdminUsuariosTorneoContenido() {
       return;
     }
 
+    const equipoParaAgregar =
+      torneo.modalidad === "equipo" ? equipoNuevo.trim() : "";
+
+    if (
+      equipoParaAgregar &&
+      inscripciones.some(
+        (i) =>
+          (i.equipo ?? i.usuario).toLowerCase() ===
+          equipoParaAgregar.toLowerCase()
+      )
+    ) {
+      setAgregando(false);
+      alert("Ya hay otro equipo con ese nombre en este torneo.");
+      return;
+    }
+
     const inscritosNoRechazados = inscripciones.filter(
       (i) => i.estado_pago !== "rechazado"
     ).length;
@@ -159,6 +371,7 @@ function AdminUsuariosTorneoContenido() {
         nombre: usuarioEncontrado.nombre,
         usuario: usuarioEncontrado.usuario,
         estado_pago: "confirmado",
+        ...(equipoParaAgregar ? { equipo: equipoParaAgregar } : {}),
       });
 
     if (insertError) {
@@ -176,10 +389,14 @@ function AdminUsuariosTorneoContenido() {
     });
 
     setUsuarioNuevo("");
+    setEquipoNuevo("");
     setAgregando(false);
 
     cargarInscripciones(torneoId);
   }
+
+  const torneoActual = torneos.find((t) => t.id === torneoId);
+  const esEquipo = torneoActual?.modalidad === "equipo";
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -228,6 +445,15 @@ function AdminUsuariosTorneoContenido() {
                   Agregar usuario al torneo
                 </h2>
 
+                {esEquipo && (
+                  <input
+                    value={equipoNuevo}
+                    onChange={(e) => setEquipoNuevo(e.target.value)}
+                    placeholder="Nombre del equipo (opcional)"
+                    className="mb-3 w-full bg-black border border-zinc-700 rounded-xl p-3 outline-none focus:border-red-600"
+                  />
+                )}
+
                 <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     value={usuarioNuevo}
@@ -265,39 +491,148 @@ function AdminUsuariosTorneoContenido() {
                       key={i.id}
                       className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between gap-4"
                     >
-                      <div>
-                        <p className="font-bold">
-                          {i.nombre}{" "}
-                          <span className="text-zinc-500 font-normal">
-                            ({i.usuario})
-                          </span>
-                        </p>
-
-                        {i.equipo && (
-                          <p className="mt-1 mb-2 flex items-center gap-2 text-sm text-zinc-300">
-                            <Users size={14} className="text-red-500 shrink-0" />
-                            <span className="text-zinc-500">Equipo:</span>
-                            <span className="font-semibold text-white">
-                              {i.equipo}
-                            </span>
-                          </p>
+                      <div className="flex items-center gap-4 min-w-0">
+                        {(esEquipo || i.equipo || i.escudo_url) && (
+                          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-zinc-700 bg-black flex items-center justify-center">
+                            {i.escudo_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={i.escudo_url}
+                                alt={`Escudo de ${i.equipo ?? i.nombre}`}
+                                className="h-full w-full object-contain"
+                              />
+                            ) : (
+                              <Users size={22} className="text-zinc-600" />
+                            )}
+                          </div>
                         )}
 
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                            i.estado_pago === "confirmado"
-                              ? "bg-green-500/10 text-green-400 border border-green-500"
-                              : i.estado_pago === "rechazado"
-                              ? "bg-red-500/10 text-red-400 border border-red-500"
-                              : "bg-yellow-500/10 text-yellow-400 border border-yellow-500"
-                          }`}
-                        >
-                          {i.estado_pago === "confirmado"
-                            ? "Pago confirmado"
-                            : i.estado_pago === "rechazado"
-                            ? "Pago rechazado"
-                            : "Pago pendiente"}
-                        </span>
+                        <div className="min-w-0">
+                          <p className="font-bold">
+                            {i.nombre}{" "}
+                            <span className="text-zinc-500 font-normal">
+                              ({i.usuario})
+                            </span>
+                          </p>
+
+                          {esEquipo || i.equipo ? (
+                            editandoId === i.id ? (
+                              <div className="mt-1 mb-2 flex flex-wrap items-center gap-2">
+                                <input
+                                  autoFocus
+                                  value={nombreEditando}
+                                  onChange={(e) => setNombreEditando(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") guardarNombreEquipo(i);
+                                    if (e.key === "Escape") setEditandoId(null);
+                                  }}
+                                  placeholder="Nombre del equipo"
+                                  className="w-56 max-w-full rounded-lg bg-black border border-zinc-700 px-3 py-1.5 text-sm outline-none focus:border-red-600"
+                                />
+
+                                <button
+                                  onClick={() => guardarNombreEquipo(i)}
+                                  disabled={guardandoNombre}
+                                  title="Guardar nombre"
+                                  className="flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold hover:bg-green-500 disabled:opacity-60"
+                                >
+                                  <Check size={14} />
+                                  {guardandoNombre ? "Guardando..." : "Guardar"}
+                                </button>
+
+                                <button
+                                  onClick={() => setEditandoId(null)}
+                                  disabled={guardandoNombre}
+                                  title="Cancelar"
+                                  className="flex items-center gap-1 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800"
+                                >
+                                  <X size={14} />
+                                  Cancelar
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="mt-1 mb-2 flex flex-wrap items-center gap-2 text-sm text-zinc-300">
+                                <Users size={14} className="text-red-500 shrink-0" />
+                                <span className="text-zinc-500">Equipo:</span>
+                                {i.equipo ? (
+                                  <span className="font-semibold text-white">
+                                    {i.equipo}
+                                  </span>
+                                ) : (
+                                  <span className="italic text-zinc-500">
+                                    Sin nombre
+                                  </span>
+                                )}
+
+                                <button
+                                  onClick={() => empezarEdicionNombre(i)}
+                                  title="Editar nombre del equipo"
+                                  className="flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                                >
+                                  <Pencil size={12} />
+                                  {i.equipo ? "Editar" : "Poner nombre"}
+                                </button>
+                              </p>
+                            )
+                          ) : null}
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                i.estado_pago === "confirmado"
+                                  ? "bg-green-500/10 text-green-400 border border-green-500"
+                                  : i.estado_pago === "rechazado"
+                                  ? "bg-red-500/10 text-red-400 border border-red-500"
+                                  : "bg-yellow-500/10 text-yellow-400 border border-yellow-500"
+                              }`}
+                            >
+                              {i.estado_pago === "confirmado"
+                                ? "Pago confirmado"
+                                : i.estado_pago === "rechazado"
+                                ? "Pago rechazado"
+                                : "Pago pendiente"}
+                            </span>
+
+                            {(esEquipo || i.equipo) && (
+                              <>
+                                <label
+                                  className={`flex cursor-pointer items-center gap-1.5 rounded-full border border-zinc-700 px-3 py-0.5 text-xs font-semibold text-zinc-300 transition hover:bg-zinc-800 ${
+                                    subiendoEscudoId === i.id
+                                      ? "pointer-events-none opacity-60"
+                                      : ""
+                                  }`}
+                                >
+                                  <ImagePlus size={12} />
+                                  {subiendoEscudoId === i.id
+                                    ? "Subiendo..."
+                                    : i.escudo_url
+                                    ? "Cambiar escudo"
+                                    : "Subir escudo"}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      subirEscudo(i, e.target.files?.[0]);
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
+
+                                {i.escudo_url && (
+                                  <button
+                                    onClick={() => quitarEscudo(i)}
+                                    title="Quitar escudo"
+                                    className="flex items-center gap-1.5 rounded-full border border-zinc-700 px-3 py-0.5 text-xs font-semibold text-zinc-400 transition hover:border-red-600 hover:text-red-400"
+                                  >
+                                    <Trash2 size={12} />
+                                    Quitar escudo
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                       <button

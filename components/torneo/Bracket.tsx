@@ -30,6 +30,9 @@ type Props = {
   miUsuario?: string | null;
   torneoId: string;
 
+  // Escudos por nombre de equipo (o de usuario en torneos individuales)
+  escudos?: Record<string, string>;
+
   finalTerminada?: boolean;
   campeon?: string | null;
   mostrarReclamar?: boolean;
@@ -72,6 +75,7 @@ export default function Bracket({
   partidos,
   miUsuario,
   torneoId,
+  escudos = {},
   finalTerminada,
   campeon,
   mostrarReclamar,
@@ -175,6 +179,8 @@ export default function Bracket({
         numero={numero}
         jugador1={p.jugador1 ?? ""}
         jugador2={p.jugador2 ?? ""}
+        escudo1={escudos[p.jugador1 ?? ""] ?? null}
+        escudo2={escudos[p.jugador2 ?? ""] ?? null}
         capitan1={p.capitan1 ?? null}
         capitan2={p.capitan2 ?? null}
         golesJugador1={p.goles_jugador1}
@@ -268,7 +274,16 @@ export default function Bracket({
             color: ORO,
           }}
         >
-          <Trophy size={28} />
+          {finalTerminada && campeon && escudos[campeon] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={escudos[campeon]}
+              alt={`Escudo de ${campeon}`}
+              className="h-full w-full rounded-xl object-contain p-1"
+            />
+          ) : (
+            <Trophy size={28} />
+          )}
         </div>
 
         <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">

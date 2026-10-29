@@ -18,6 +18,10 @@ type MatchCardProps = {
   jugador1: string;
   jugador2: string;
 
+  // Escudos de los equipos (opcionales)
+  escudo1?: string | null;
+  escudo2?: string | null;
+
   trucoId1?: string | null;
   trucoId2?: string | null;
 
@@ -43,6 +47,7 @@ function iniciales(nombre: string) {
 
 function Fila({
   nombre,
+  escudo,
   trucoId,
   goles,
   penales,
@@ -51,6 +56,7 @@ function Fila({
   esMio,
 }: {
   nombre: string;
+  escudo?: string | null;
   trucoId?: string | null;
   goles: number | null;
   penales: number | null;
@@ -66,17 +72,28 @@ function Fila({
         gano ? "bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]" : ""
       }`}
     >
-      <div
-        className={`w-7 h-7 shrink-0 rounded-md text-[10px] font-bold flex items-center justify-center ${
-          pendiente
-            ? "bg-zinc-900 text-zinc-600"
-            : gano
-            ? "bg-[var(--accent)] text-black"
-            : "bg-zinc-800 text-zinc-400"
-        }`}
-      >
-        {iniciales(nombre)}
-      </div>
+      {escudo && !pendiente ? (
+        <div className="w-8 h-8 shrink-0 overflow-hidden rounded-md border border-zinc-700 bg-black flex items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={escudo}
+            alt={`Escudo de ${nombre}`}
+            className="h-full w-full object-contain"
+          />
+        </div>
+      ) : (
+        <div
+          className={`w-8 h-8 shrink-0 rounded-md text-[10px] font-bold flex items-center justify-center ${
+            pendiente
+              ? "bg-zinc-900 text-zinc-600"
+              : gano
+              ? "bg-[var(--accent)] text-black"
+              : "bg-zinc-800 text-zinc-400"
+          }`}
+        >
+          {iniciales(nombre)}
+        </div>
+      )}
 
       <div className="min-w-0 flex-1">
         <span
@@ -126,6 +143,8 @@ export default function MatchCard({
   numero,
   jugador1,
   jugador2,
+  escudo1,
+  escudo2,
   trucoId1,
   trucoId2,
   capitan1,
@@ -206,6 +225,7 @@ export default function MatchCard({
 
         <Fila
           nombre={jugador1}
+          escudo={escudo1}
           trucoId={trucoId1}
           goles={golesJugador1}
           penales={penalesJugador1}
@@ -218,6 +238,7 @@ export default function MatchCard({
 
         <Fila
           nombre={jugador2}
+          escudo={escudo2}
           trucoId={trucoId2}
           goles={golesJugador2}
           penales={penalesJugador2}

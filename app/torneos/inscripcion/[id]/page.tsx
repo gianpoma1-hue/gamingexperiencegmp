@@ -47,6 +47,8 @@ export default function InscripcionPage() {
   const [paso, setPaso] = useState<"revisar" | "pago">("revisar");
   const [equipo, setEquipo] = useState("");
   const [trucoId, setTrucoId] = useState("");
+  const [escudoArchivo, setEscudoArchivo] = useState<File | null>(null);
+  const [escudoPreview, setEscudoPreview] = useState<string | null>(null);
   const [datosPago, setDatosPago] = useState({
     titular: "",
     cbu: "",
@@ -138,10 +140,60 @@ export default function InscripcionPage() {
     setLoading(false);
   }
 
+  function elegirEscudo(archivo: File | undefined) {
+    if (!archivo) return;
+
+    if (!archivo.type.startsWith("image/")) {
+      alert("Elegí un archivo de imagen (PNG, JPG, WEBP...).");
+      return;
+    }
+
+    if (archivo.size > 5 * 1024 * 1024) {
+      alert("La imagen no puede pesar más de 5MB.");
+      return;
+    }
+
+    if (escudoPreview) URL.revokeObjectURL(escudoPreview);
+
+    setEscudoArchivo(archivo);
+    setEscudoPreview(URL.createObjectURL(archivo));
+  }
+
+  function quitarEscudoElegido() {
+    if (escudoPreview) URL.revokeObjectURL(escudoPreview);
+    setEscudoArchivo(null);
+    setEscudoPreview(null);
+  }
+
   async function confirmarTransferencia() {
     if (!torneo || !perfil || !user) return;
 
     setGuardando(true);
+
+    // El escudo es opcional: si falla la subida, igual te inscribimos
+    // y el admin puede cargarlo después.
+    let escudoUrl: string | null = null;
+
+    if (escudoArchivo && torneo.modalidad === "equipo") {
+      const extension = escudoArchivo.name.split(".").pop() || "png";
+      const ruta = `${user.id}/escudo-${Date.now()}.${extension}`;
+
+      const { error: errorSubida } = await supabase.storage
+        .from("avatars")
+        .upload(ruta, escudoArchivo, { upsert: true });
+
+      if (errorSubida) {
+        alert(
+          "No pudimos subir el escudo, pero tu inscripción sigue adelante. Podés pedirle a la organización que lo cargue."
+        );
+      } else {
+        const { data: publicUrlData } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(ruta);
+
+        escudoUrl = publicUrlData.publicUrl;
+      }
+    }
 
     const { error } = await supabase
       .from("inscripciones")
@@ -152,6 +204,7 @@ export default function InscripcionPage() {
         plataforma: perfil.plataforma,
         estado_pago: "pendiente",
         equipo: torneo.modalidad === "equipo" ? equipo.trim() : null,
+        ...(escudoUrl ? { escudo_url: escudoUrl } : {}),
         truco_id:
           torneo.juego?.toLowerCase().includes("truco") ? trucoId.trim() : null,
       });
@@ -310,6 +363,58 @@ export default function InscripcionPage() {
                     placeholder="Ej: Los Cracks"
                     className="mt-1 w-full rounded-lg bg-zinc-800 border border-zinc-700 px-4 py-3 text-white font-bold outline-none focus:border-red-600"
                   />
+
+                  <div className="mt-4">
+                    <p className="text-zinc-400 text-sm">
+                      Escudo del equipo{" "}
+                      <span className="text-zinc-600">(opcional)</span>
+                    </p>
+
+                    <div className="mt-2 flex items-center gap-4">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-zinc-700 bg-black flex items-center justify-center text-zinc-600 text-xs">
+                        {escudoPreview ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={escudoPreview}
+                            alt="Escudo del equipo"
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          "Sin escudo"
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <label className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-semibold hover:bg-zinc-700 transition">
+                          {escudoArchivo ? "Cambiar imagen" : "Adjuntar imagen"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              elegirEscudo(e.target.files?.[0]);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+
+                        {escudoArchivo && (
+                          <button
+                            type="button"
+                            onClick={quitarEscudoElegido}
+                            className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-400 hover:text-red-400 transition"
+                          >
+                            Quitar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="mt-2 text-xs text-zinc-500">
+                      PNG, JPG o WEBP, hasta 5MB. Si no tenés escudo ahora,
+                      lo puede cargar la organización después.
+                    </p>
+                  </div>
                 </div>
               )}
 

@@ -93,6 +93,7 @@ export default function LlaveTorneoPage() {
   const [torneo, setTorneo] = useState<Torneo | null>(null);
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [inscritos, setInscritos] = useState(0);
+  const [escudos, setEscudos] = useState<Record<string, string>>({});
   const [miUsuario, setMiUsuario] = useState<string | null>(null);
   const [soporteAbierto, setSoporteAbierto] = useState(false);
   const [pestana, setPestana] = useState<Pestana>("llaves");
@@ -121,6 +122,22 @@ export default function LlaveTorneoPage() {
       .select("*", { count: "exact", head: true })
       .eq("torneo_id", id);
 
+    // Escudos de los equipos: se cruzan por el mismo nombre que usan los partidos
+    // (nombre del equipo en torneos por equipos, usuario en los individuales).
+    const { data: inscripcionesData } = await supabase
+      .from("inscripciones")
+      .select("*")
+      .eq("torneo_id", id);
+
+    const mapaEscudos: Record<string, string> = {};
+    (inscripcionesData ?? []).forEach(
+      (ins: { usuario?: string; equipo?: string | null; escudo_url?: string | null }) => {
+        if (!ins.escudo_url) return;
+        if (ins.equipo) mapaEscudos[ins.equipo] = ins.escudo_url;
+        if (ins.usuario) mapaEscudos[ins.usuario] = ins.escudo_url;
+      }
+    );
+
     const { data: partidosData } = await supabase
       .from("partidos")
       .select("*")
@@ -140,6 +157,7 @@ export default function LlaveTorneoPage() {
 
     setTorneo(torneoData);
     setInscritos(count || 0);
+    setEscudos(mapaEscudos);
     setPartidos((partidosData as Partido[]) || []);
     setLoading(false);
   }
@@ -383,6 +401,7 @@ export default function LlaveTorneoPage() {
                   jugadoresMax={torneo.jugadores_max}
                   miUsuario={miUsuario}
                   torneoId={id}
+                  escudos={escudos}
                   finalTerminada={finalTerminada}
                   campeon={torneo.campeon}
                   mostrarReclamar={soyCampeon}
