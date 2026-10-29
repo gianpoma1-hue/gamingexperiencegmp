@@ -13,6 +13,7 @@ const JUEGOS_CON_EQUIPO = [
   "Rocket League",
   "Truco Blyts",
   "League of Legends",
+  "Counter-Strike 2",
 ];
 
 const OPCIONES_JUGADORES = [2, 4, 8, 16, 32, 64];
@@ -215,8 +216,8 @@ export default function EditarTorneoPage() {
                 {!permiteEquipo && (
                   <p className="text-xs text-zinc-500 mt-2">
                     El modo por equipos solo está disponible para EA
-                    SPORTS FC 26, Rocket League, Truco Blyts y League of
-                    Legends.
+                    SPORTS FC 26, Rocket League, Truco Blyts, League of
+                    Legends y Counter-Strike 2.
                   </p>
                 )}
               </div>

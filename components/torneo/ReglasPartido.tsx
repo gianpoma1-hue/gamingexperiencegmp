@@ -29,7 +29,7 @@ const REGLAS_CS2: SeccionRegla[] = [
       "**Modalidad:** 5 vs. 5, eliminación directa.",
       "**Semifinales:** al mejor de 3 mapas (BO3).",
       "**Final:** al mejor de 5 mapas (BO5).",
-      "Los mapas serán sorteados y asignados por la organización. No podrán modificarse por decisión de los equipos.",
+      "**Mapas:** se definen mediante veto. Los propios equipos vetan los mapas para determinar cuáles se jugarán.",
       "El segundo puesto recibirá una inscripción gratuita para un futuro torneo de Gaming Experience GMP.",
     ],
   },

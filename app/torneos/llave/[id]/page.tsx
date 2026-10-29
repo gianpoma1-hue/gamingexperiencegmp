@@ -20,7 +20,7 @@ import ReglasPartido from "@/components/torneo/ReglasPartido";
 import DMChat from "@/components/mensajes/DMChat";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
-import { juegos } from "@/lib/games";
+import { juegos, jugadoresPorEquipo } from "@/lib/games";
 
 interface Torneo {
   id: string;
@@ -179,7 +179,8 @@ export default function LlaveTorneoPage() {
   const rutaVolver = juegoInfo?.ruta ?? "/torneos";
 
   const esEquipo = torneo.modalidad === "equipo";
-  const formato = esEquipo ? "2 vs 2" : "1 vs 1";
+  const porEquipo = jugadoresPorEquipo(torneo.juego);
+  const formato = esEquipo ? `${porEquipo} vs ${porEquipo}` : "1 vs 1";
 
   const finalTerminada = torneo.estado === "Finalizado" && !!torneo.campeon;
 
