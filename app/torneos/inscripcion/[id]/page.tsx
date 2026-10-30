@@ -19,6 +19,7 @@ type Torneo = {
   jugadores_max: number;
   inscritos: number;
   modalidad: "individual" | "equipo";
+  descripcion?: string | null;
 };
 
 type Perfil = {
@@ -273,8 +274,15 @@ export default function InscripcionPage() {
           {torneo?.nombre}
         </p>
 
+        {torneo?.descripcion?.trim() && (
+          <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-line mt-3 mb-3">
+            {torneo.descripcion}
+          </p>
+        )}
+
         <p className="text-red-500 font-bold mb-8">
-          Jugadores: {torneo?.inscritos} / {torneo?.jugadores_max}
+          {torneo?.modalidad === "equipo" ? "Equipos" : "Jugadores"}:{" "}
+          {torneo?.inscritos} / {torneo?.jugadores_max}
         </p>
 
         {yaInscripto ? (

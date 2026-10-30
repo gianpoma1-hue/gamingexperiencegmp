@@ -17,6 +17,15 @@ export const juegos: Game[] = [
     modalidad: "individual",
   },
   {
+    id: "ea-fc-27",
+    nombre: "EA SPORTS FC 27",
+    // Reemplazá por public/images/games/ea-fc-27.jpg cuando tengas la imagen
+    imagen: "/images/games/ea-fc.jpg",
+    disponible: true,
+    ruta: "/torneos/ea-fc-27",
+    modalidad: "individual",
+  },
+  {
     id: "fortnite",
     nombre: "Fortnite",
     imagen: "/images/games/fortnite.jpg",

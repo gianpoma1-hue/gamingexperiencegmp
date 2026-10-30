@@ -10,6 +10,9 @@ export type TorneoCardData = {
   jugadores_max: number;
   premio: number;
   premio_segundo?: number | null;
+  modalidad?: "individual" | "equipo" | null;
+  descripcion?: string | null;
+  segundo_inscripcion_gratis?: boolean | null;
   inscripcion: number;
   fecha: string;
   hora?: string | null;
@@ -23,13 +26,21 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
   const router = useRouter();
 
   const completo = torneo.inscritos >= torneo.jugadores_max;
-  const tieneSegundoPremio = !!torneo.premio_segundo && torneo.premio_segundo > 0;
+  const tieneSegundoDinero = !!torneo.premio_segundo && torneo.premio_segundo > 0;
+  const segundoGratis = !!torneo.segundo_inscripcion_gratis;
+  const tieneSegundoPremio = tieneSegundoDinero || segundoGratis;
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl lg:rounded-3xl p-5 lg:p-8 hover:border-red-600 transition">
       <h2 className="text-xl lg:text-3xl font-black">{torneo.nombre}</h2>
 
       <p className="text-zinc-400 mt-2 text-sm lg:text-base">{torneo.juego}</p>
+
+      {torneo.descripcion?.trim() && (
+        <p className="text-zinc-300 mt-4 text-sm lg:text-base leading-relaxed whitespace-pre-line">
+          {torneo.descripcion}
+        </p>
+      )}
 
       {/* Premios */}
       <div
@@ -51,9 +62,25 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
             <p className="text-zinc-400 text-xs lg:text-sm font-semibold">
               🥈 Premio 2do puesto
             </p>
-            <h3 className="text-zinc-200 text-lg lg:text-2xl font-black mt-1">
-              ${torneo.premio_segundo!.toLocaleString("es-AR")}
-            </h3>
+            {tieneSegundoDinero && (
+              <h3 className="text-zinc-200 text-lg lg:text-2xl font-black mt-1">
+                ${torneo.premio_segundo!.toLocaleString("es-AR")}
+              </h3>
+            )}
+
+            {segundoGratis && (
+              <p
+                className={
+                  tieneSegundoDinero
+                    ? "text-zinc-400 text-xs lg:text-sm font-semibold mt-1"
+                    : "text-zinc-200 text-base lg:text-xl font-black mt-1 leading-tight"
+                }
+              >
+                {tieneSegundoDinero
+                  ? "+ Inscripción gratis para un futuro torneo"
+                  : "Inscripción gratis para un futuro torneo"}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -68,7 +95,9 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
         </div>
 
         <div>
-          <p className="text-zinc-500 text-xs lg:text-sm">Jugadores</p>
+          <p className="text-zinc-500 text-xs lg:text-sm">
+            {torneo.modalidad === "equipo" ? "Equipos" : "Jugadores"}
+          </p>
           <h3 className="text-red-500 text-sm sm:text-lg font-black">
             {torneo.inscritos} / {torneo.jugadores_max}
           </h3>

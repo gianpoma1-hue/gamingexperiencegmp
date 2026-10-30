@@ -10,6 +10,7 @@ import { juegos, jugadoresPorEquipo } from "@/lib/games";
 
 const JUEGOS_CON_EQUIPO = [
   "EA SPORTS FC 26",
+  "EA SPORTS FC 27",
   "Rocket League",
   "Truco Blyts",
   "League of Legends",
@@ -35,6 +36,7 @@ export default function EditarTorneoPage() {
   const [jugadoresMax, setJugadoresMax] = useState(16);
   const [premio, setPremio] = useState("");
   const [premioSegundo, setPremioSegundo] = useState("");
+  const [segundoGratis, setSegundoGratis] = useState(false);
   const [inscripcion, setInscripcion] = useState("");
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
@@ -68,6 +70,7 @@ export default function EditarTorneoPage() {
     setJugadoresMax(data.jugadores_max);
     setPremio(String(data.premio));
     setPremioSegundo(String(data.premio_segundo ?? 0));
+    setSegundoGratis(!!data.segundo_inscripcion_gratis);
     setInscripcion(String(data.inscripcion));
     setFecha(data.fecha);
     setHora(data.hora);
@@ -108,6 +111,7 @@ export default function EditarTorneoPage() {
         jugadores_max: jugadoresMax,
         premio: Number(premio),
         premio_segundo: Number(premioSegundo) || 0,
+        segundo_inscripcion_gratis: segundoGratis,
         inscripcion: Number(inscripcion),
         fecha,
         hora,
@@ -216,7 +220,7 @@ export default function EditarTorneoPage() {
                 {!permiteEquipo && (
                   <p className="text-xs text-zinc-500 mt-2">
                     El modo por equipos solo está disponible para EA
-                    SPORTS FC 26, Rocket League, Truco Blyts, League of
+                    SPORTS FC 26/27, Rocket League, Truco Blyts, League of
                     Legends y Counter-Strike 2.
                   </p>
                 )}
@@ -281,6 +285,16 @@ export default function EditarTorneoPage() {
                   onChange={(e) => setPremioSegundo(e.target.value)}
                   className="w-full bg-black border border-zinc-700 rounded-xl p-4 outline-none focus:border-red-600"
                 />
+
+                <label className="mt-3 flex cursor-pointer items-center gap-3 text-sm text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={segundoGratis}
+                    onChange={(e) => setSegundoGratis(e.target.checked)}
+                    className="h-4 w-4 accent-red-600"
+                  />
+                  Inscripción gratis para un futuro torneo
+                </label>
               </div>
 
               <div>

@@ -2,7 +2,7 @@
 
 // Juegos que se miden con goles (fútbol). Todo lo demás usa
 // el sistema genérico de "partidas ganadas/perdidas".
-export const JUEGOS_CON_GOLES = ["EA SPORTS FC 26"];
+export const JUEGOS_CON_GOLES = ["EA SPORTS FC 26", "EA SPORTS FC 27"];
 
 interface RankingParams {
   juego: string;

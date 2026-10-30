@@ -61,6 +61,7 @@ interface Partido {
 const ACENTOS: Record<string, string> = {
   "Counter-Strike 2": "#22d3ee",
   "EA SPORTS FC 26": "#34d399",
+  "EA SPORTS FC 27": "#34d399",
   "League of Legends": "#60a5fa",
   "Truco Blyts": "#f59e0b",
 };
@@ -220,7 +221,8 @@ export default function LlaveTorneoPage() {
     ].includes(miUsuario);
 
   const esTrucoBlyts = torneo.juego === "Truco Blyts";
-  const esFC26 = torneo.juego === "EA SPORTS FC 26";
+  const esFC26 =
+    torneo.juego === "EA SPORTS FC 26" || torneo.juego === "EA SPORTS FC 27";
   const esCS2 = torneo.juego === "Counter-Strike 2";
   const hayReglasEspeciales = esTrucoBlyts || esFC26 || esCS2;
   const mostrarAvisoReglas =

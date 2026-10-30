@@ -209,7 +209,7 @@ export default function ReglasPartido({
                     chat del partido
                   </span>{" "}
                   con tu rival para coordinar el horario e intercambiar el ID de
-                  EA SPORTS FC 26.
+                  EA SPORTS FC.
                 </span>
               </li>
 

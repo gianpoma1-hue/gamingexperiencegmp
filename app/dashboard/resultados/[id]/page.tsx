@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
 import { guardarResultado, editarResultado } from "@/lib/tournament";
 
-const JUEGOS_CON_GOLES = ["EA SPORTS FC 26"];
+const JUEGOS_CON_GOLES = ["EA SPORTS FC 26", "EA SPORTS FC 27"];
 
 interface Partido {
   id: string;

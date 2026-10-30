@@ -11,6 +11,7 @@ interface Torneo {
   juego: string;
   jugadores_max: number;
   estado: string;
+  modalidad?: "individual" | "equipo" | null;
 }
 
 export default function ResultadosPage() {
@@ -24,7 +25,7 @@ export default function ResultadosPage() {
   async function cargarTorneos() {
     const { data, error } = await supabase
       .from("torneos")
-      .select("id,nombre,juego,jugadores_max,estado")
+      .select("id,nombre,juego,jugadores_max,estado,modalidad")
       .order("created_at", { ascending: false });
 
     if (!error && data) {
@@ -75,7 +76,8 @@ export default function ResultadosPage() {
                 </p>
 
                 <p className="text-zinc-400">
-                  {torneo.jugadores_max} jugadores
+                  {torneo.jugadores_max}{" "}
+                  {torneo.modalidad === "equipo" ? "equipos" : "jugadores"}
                 </p>
 
                 <p className="mt-2 text-red-500 font-semibold">

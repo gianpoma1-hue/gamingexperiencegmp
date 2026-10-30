@@ -139,7 +139,7 @@ export default function AdminRankingPage() {
             <div>
               <h1 className="text-4xl font-black">Ranking</h1>
               <p className="text-zinc-400 mt-2">
-                Estadísticas actuales de EA SPORTS FC 26. El reinicio también
+                Estadísticas actuales de EA SPORTS FC. El reinicio también
                 borra las estadísticas de los demás juegos (Truco Blyts, etc.).
               </p>
             </div>
