@@ -77,8 +77,8 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
                 }
               >
                 {tieneSegundoDinero
-                  ? "+ Inscripción gratis para un futuro torneo"
-                  : "Inscripción gratis para un futuro torneo"}
+                  ? "+ Inscripción gratis"
+                  : "Inscripción gratis"}
               </p>
             )}
           </div>
