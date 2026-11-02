@@ -33,7 +33,7 @@ export default function RankingPage() {
   // muestran todos los juegos.
   const juegosIndividuales = juegos;
 
-  const [selectedId, setSelectedId] = useState(juegosIndividuales[0]?.id ?? "ea-fc");
+  const [selectedId, setSelectedId] = useState(juegosIndividuales[0]?.id ?? "ea-fc-27");
   const selectedGame = juegos.find((juego) => juego.id === selectedId)!;
 
   const esJuegoConGoles = JUEGOS_CON_GOLES.includes(selectedGame.nombre);

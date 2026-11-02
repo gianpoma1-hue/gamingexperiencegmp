@@ -9,14 +9,6 @@
 
 export const juegos: Game[] = [
   {
-    id: "ea-fc",
-    nombre: "EA SPORTS FC 26",
-    imagen: "/images/games/ea-fc.jpg",
-    disponible: true,
-    ruta: "/torneos/ea-fc",
-    modalidad: "individual",
-  },
-  {
     id: "ea-fc-27",
     nombre: "EA SPORTS FC 27",
     imagen: "/images/games/ea-fc-27.jpg",
@@ -82,7 +74,27 @@ export const juegos: Game[] = [
   },
 ];
 
+// Juegos que ya no se juegan. No aparecen en la sección de torneos ni al crear
+// torneos nuevos, pero se conservan para que los torneos viejos sigan
+// mostrándose bien (imagen, link de "volver", etc.).
+export const juegosArchivados: Game[] = [
+  {
+    id: "ea-fc",
+    nombre: "EA SPORTS FC 26",
+    imagen: "/images/games/ea-fc.jpg",
+    disponible: false,
+    ruta: "/torneos",
+    modalidad: "individual",
+  },
+];
+
+export function buscarJuego(nombre: string): Game | undefined {
+  return [...juegos, ...juegosArchivados].find((j) => j.nombre === nombre);
+}
+
 export const JUGADORES_POR_EQUIPO: Record<string, number> = {
+  "EA SPORTS FC 26": 2,
+  "EA SPORTS FC 27": 2,
   "League of Legends": 5,
   "Counter-Strike 2": 5,
   "Valorant": 5,

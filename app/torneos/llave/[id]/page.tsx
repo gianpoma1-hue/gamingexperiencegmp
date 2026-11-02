@@ -20,7 +20,7 @@ import ReglasPartido from "@/components/torneo/ReglasPartido";
 import DMChat from "@/components/mensajes/DMChat";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
-import { juegos, jugadoresPorEquipo } from "@/lib/games";
+import { buscarJuego, jugadoresPorEquipo } from "@/lib/games";
 
 interface Torneo {
   id: string;
@@ -194,7 +194,7 @@ export default function LlaveTorneoPage() {
     );
   }
 
-  const juegoInfo = juegos.find((j) => j.nombre === torneo.juego);
+  const juegoInfo = buscarJuego(torneo.juego);
   const rutaVolver = juegoInfo?.ruta ?? "/torneos";
 
   const esEquipo = torneo.modalidad === "equipo";

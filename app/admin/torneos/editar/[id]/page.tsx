@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
-import { juegos, jugadoresPorEquipo } from "@/lib/games";
+import { juegos, juegosArchivados, jugadoresPorEquipo } from "@/lib/games";
 
 const JUEGOS_CON_EQUIPO = [
   "EA SPORTS FC 26",
@@ -188,7 +188,10 @@ export default function EditarTorneoPage() {
                   onChange={(e) => cambiarJuego(e.target.value)}
                   className="w-full bg-black border border-zinc-700 rounded-xl p-4"
                 >
-                  {juegos.map((j) => (
+                  {[
+                    ...juegos,
+                    ...juegosArchivados.filter((j) => j.nombre === juego),
+                  ].map((j) => (
                     <option key={j.id} value={j.nombre}>
                       {j.nombre}
                     </option>
