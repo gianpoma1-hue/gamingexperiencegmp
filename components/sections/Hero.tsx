@@ -25,16 +25,16 @@ export default function Hero() {
         <div className="px-6 pt-28 pb-2">
           <h1 className="font-black leading-[1.05]">
             <span className="block text-[36px] sm:text-[46px] text-white">
-              SUBI DE NIVEL
+              SUBÍ DE NIVEL
             </span>
             <span className="block text-[36px] sm:text-[46px] text-red-600 mt-2">
-              GANA PREMIOS
+              GANÁ PREMIOS
             </span>
           </h1>
 
           <p className="mt-6 text-zinc-400 text-base sm:text-lg leading-7">
             Competí en torneos de los mejores videojuegos,
-            escalá posiciones y consegui premios reales.
+            escalá posiciones y conseguí premios reales.
           </p>
 
           <Link
@@ -85,16 +85,16 @@ export default function Hero() {
             <div className="max-w-2xl">
               <h1 className="font-black leading-[0.95]">
                 <span className="block text-[64px] text-white">
-                  SUBI DE NIVEL
+                  SUBÍ DE NIVEL
                 </span>
                 <span className="block text-[64px] text-red-600 mt-3">
-                  GANA PREMIOS
+                  GANÁ PREMIOS
                 </span>
               </h1>
 
               <p className="mt-10 text-zinc-400 text-2xl leading-10">
                 Competí en torneos de los mejores videojuegos,
-                escalá posiciones y consegui premios reales.
+                escalá posiciones y conseguí premios reales.
               </p>
 
               <Link

@@ -127,7 +127,7 @@ export default function LlaveTorneoPage() {
     // (nombre del equipo en torneos por equipos, usuario en los individuales).
     const { data: inscripcionesData } = await supabase
       .from("inscripciones")
-      .select("*")
+      .select("usuario, equipo, escudo_url")
       .eq("torneo_id", id);
 
     const mapaEscudos: Record<string, string> = {};

@@ -125,7 +125,7 @@ premios reales.
             </div>
 
             <p className="text-zinc-400 mt-3 text-xs lg:text-sm leading-6">
-              Seguinos en instagram y sumate anuestra comunidad de WhatsApp: ahí avisamos todos los
+              Seguinos en Instagram y sumate a nuestra comunidad de WhatsApp: ahí avisamos todos los
               torneos, inscripciones abiertas y novedades.
             </p>
 

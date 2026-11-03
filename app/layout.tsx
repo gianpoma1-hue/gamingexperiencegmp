@@ -14,8 +14,38 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GMP Gaming",
-  description: "Competí en torneos de videojuegos, escalá posiciones y conseguí premios reales.",
+  metadataBase: new URL("https://gmpgaming.com"),
+  title: {
+    default: "GMP Gaming | Torneos online de videojuegos en Argentina",
+    template: "%s | GMP Gaming",
+  },
+  description:
+    "Competí en torneos online de videojuegos, escalá posiciones y conseguí premios reales.",
+  applicationName: "GMP Gaming",
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    url: "https://gmpgaming.com",
+    siteName: "GMP Gaming",
+    title: "GMP Gaming | Subí de nivel. Ganá premios.",
+    description:
+      "Torneos online de videojuegos con premios reales. Registrate gratis, elegí tu torneo y competí.",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "GMP Gaming - Subí de nivel. Ganá premios.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GMP Gaming | Subí de nivel. Ganá premios.",
+    description:
+      "Torneos online de videojuegos con premios reales. Registrate gratis y competí.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({
@@ -25,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es-AR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
 <body className="min-h-full flex flex-col" suppressHydrationWarning>

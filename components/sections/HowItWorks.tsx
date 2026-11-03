@@ -36,7 +36,7 @@ const steps = [
     number: "4",
     title: "Ganá Premios",
     description:
-      "Llegá a la final, ganá el torneo y retirás tu premio de forma segura.",
+      "Llegá a la final, ganá el torneo y retirá tu premio de forma segura.",
     href: "/ranking",
   },
 ];
