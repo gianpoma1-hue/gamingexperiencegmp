@@ -1,5 +1,6 @@
 ﻿import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/sections/Hero";
+import ProximosTorneos from "@/components/sections/ProximosTorneos";
 import HowItWorks from "@/components/sections/HowItWorks";
 import WhyChooseUs from "@/components/sections/WhyChooseUs";
 import Footer from "@/components/footer/Footer";
@@ -17,6 +18,8 @@ export default function Home() {
       <Navbar />
 
       <Hero />
+
+      <ProximosTorneos />
 
       <HowItWorks />
 
