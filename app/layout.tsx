@@ -59,7 +59,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
 <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        {/* Google Analytics (gtag.js) */}
+        {/* Google tag (gtag.js): Analytics + Google Ads */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-P5MQXZ2GTR"
           strategy="afterInteractive"
@@ -70,6 +70,7 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-P5MQXZ2GTR');
+            gtag('config', 'AW-18445425505');
           `}
         </Script>
         <AuthProvider>
