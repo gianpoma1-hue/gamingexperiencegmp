@@ -81,13 +81,9 @@ export default function InscripcionPage() {
       return;
     }
 
-    const { count } = await supabase
-      .from("inscripciones")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .eq("torneo_id", torneoId);
+    const { data: count } = await supabase.rpc("contar_inscriptos", {
+          p_torneo: torneoId,
+        });
 
     const inscritos = count || 0;
 

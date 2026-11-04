@@ -50,13 +50,9 @@ export default function LoLTorneosPage() {
 
     const torneosActualizados = await Promise.all(
       (data || []).map(async (torneo) => {
-        const { count } = await supabase
-          .from("inscripciones")
-          .select("*", {
-            count: "exact",
-            head: true,
-          })
-          .eq("torneo_id", torneo.id);
+        const { data: count } = await supabase.rpc("contar_inscriptos", {
+          p_torneo: torneo.id,
+        });
 
         let miInscripcion: "pendiente" | "confirmado" | null = null;
 

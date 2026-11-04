@@ -118,17 +118,15 @@ export default function LlaveTorneoPage() {
       return;
     }
 
-    const { count } = await supabase
-      .from("inscripciones")
-      .select("*", { count: "exact", head: true })
-      .eq("torneo_id", id);
+    const { data: count } = await supabase.rpc("contar_inscriptos", {
+          p_torneo: id,
+        });
 
     // Escudos de los equipos: se cruzan por el mismo nombre que usan los partidos
     // (nombre del equipo en torneos por equipos, usuario en los individuales).
-    const { data: inscripcionesData } = await supabase
-      .from("inscripciones")
-      .select("usuario, equipo, escudo_url")
-      .eq("torneo_id", id);
+    const { data: inscripcionesData } = await supabase.rpc("escudos_torneo", {
+      p_torneo: id,
+    });
 
     const mapaEscudos: Record<string, string> = {};
     (inscripcionesData ?? []).forEach(

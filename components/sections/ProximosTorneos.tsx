@@ -40,10 +40,9 @@ export default function ProximosTorneos() {
 
       const conCupos = await Promise.all(
         (data || []).map(async (torneo) => {
-          const { count } = await supabase
-            .from("inscripciones")
-            .select("*", { count: "exact", head: true })
-            .eq("torneo_id", torneo.id);
+          const { data: count } = await supabase.rpc("contar_inscriptos", {
+          p_torneo: torneo.id,
+        });
 
           return { ...torneo, inscritos: count || 0 } as TorneoCardData;
         })

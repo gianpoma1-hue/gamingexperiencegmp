@@ -55,14 +55,17 @@ export default function PerfilPage() {
       return;
     }
 
+    // El email no se lee de la tabla (está oculto por seguridad): sale de la sesión.
     const { data } = await supabase
       .from("usuarios")
-      .select("*")
-      .eq("email", authUser.email)
+      .select(
+        "id, nombre, usuario, plataforma, partidos_jugados, victorias, derrotas, goles_favor, goles_contra, torneos_ganados, foto_perfil"
+      )
+      .eq("id", authUser.id)
       .single();
 
     if (data) {
-      setUser(data);
+      setUser({ ...data, email: authUser.email ?? "" });
       await cargarTorneos(data.usuario);
     }
 

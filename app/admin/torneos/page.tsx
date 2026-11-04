@@ -34,26 +34,18 @@ export default function AdminTorneosPage() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    console.log("USER:", user);
-
     if (!user) {
-      alert("No hay usuario logueado");
       router.replace("/");
       return;
     }
 
-    const { data: usuario, error } = await supabase
+    const { data: usuario } = await supabase
       .from("usuarios")
-      .select("*")
-      .eq("email", user.email)
+      .select("es_admin")
+      .eq("id", user.id)
       .single();
 
-    console.log("USUARIO:", usuario);
-    console.log("ERROR:", error);
-
-    alert(JSON.stringify(usuario));
-
-    if (!usuario?.admin) {
+    if (!usuario?.es_admin) {
       router.replace("/");
       return;
     }

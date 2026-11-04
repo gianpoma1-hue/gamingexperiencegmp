@@ -29,10 +29,8 @@ export default function AdminUsuariosPage() {
   async function cargarUsuarios() {
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("usuarios")
-      .select("*")
-      .order("nombre", { ascending: true });
+    // Incluye emails: solo los admins pueden llamar a esta función.
+    const { data, error } = await supabase.rpc("admin_listar_usuarios");
 
     if (error) {
       console.error(error);
