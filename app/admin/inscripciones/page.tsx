@@ -13,10 +13,17 @@ type Inscripcion = {
   created_at: string;
   torneo_id: string;
   estado_pago: "pendiente" | "confirmado" | "rechazado";
-  torneos: { nombre: string; juego: string; }[];
+  equipo: string | null;
+  // Supabase devuelve el torneo como objeto (relación muchos a uno).
+  torneos: { nombre: string; juego: string } | { nombre: string; juego: string }[] | null;
 };
 
-// TODO: reemplazar por el link real de invitaciÃ³n al grupo de WhatsApp.
+function torneoDe(i: Inscripcion | undefined) {
+  const t = i?.torneos;
+  return Array.isArray(t) ? t[0] : t ?? undefined;
+}
+
+// TODO: reemplazar por el link real de invitación al grupo de WhatsApp.
 const WHATSAPP_COMUNIDAD_TRUCO = "https://chat.whatsapp.com/D8MrGrNL8TqH3J1fqombZa";
 
 export default function AdminInscripcionesPage() {
@@ -40,6 +47,7 @@ export default function AdminInscripcionesPage() {
         created_at,
         torneo_id,
         estado_pago,
+        equipo,
         torneos (
           nombre,
           juego
@@ -73,15 +81,15 @@ export default function AdminInscripcionesPage() {
 
     if (estado_pago === "confirmado") {
       const inscripcion = inscripciones.find((i) => i.id === id);
-      const juego = inscripcion?.torneos?.[0]?.juego;
+      const juego = torneoDe(inscripcion)?.juego;
 
       if (inscripcion && juego === "Truco Blyts") {
         await supabase.from("notificaciones").insert({
           usuario: inscripcion.usuario,
           tipo: "comunidad_whatsapp",
-          titulo: "Â¡Tu pago fue confirmado! ðŸŽ‰",
+          titulo: "¡Tu pago fue confirmado! 🎉",
           contenido:
-            "Sumate a la comunidad de WhatsApp de GMP Gaming para enterarte cuÃ¡ndo arranca cada fase, cuÃ¡ndo te toca jugar y todas las novedades del torneo.",
+            "Sumate a la comunidad de WhatsApp de GMP Gaming para enterarte cuándo arranca cada fase, cuándo te toca jugar y todas las novedades del torneo.",
           link: WHATSAPP_COMUNIDAD_TRUCO,
           leida: false,
         });
@@ -93,7 +101,7 @@ export default function AdminInscripcionesPage() {
 
   async function eliminarInscripcion(id: string) {
     const confirmar = confirm(
-      "Â¿Seguro que querÃ©s eliminar esta inscripciÃ³n?"
+      "¿Seguro que querés eliminar esta inscripción?"
     );
 
     if (!confirmar) return;
@@ -173,15 +181,28 @@ export default function AdminInscripcionesPage() {
                         Usuario: {inscripcion.usuario}
                       </p>
 
-                      <p className="text-zinc-400">
-                        Plataforma: {inscripcion.plataforma}
-                      </p>
+                      {inscripcion.equipo && (
+                        <p className="text-zinc-400">
+                          Equipo: {inscripcion.equipo}
+                        </p>
+                      )}
+
+                      {inscripcion.plataforma && (
+                        <p className="text-zinc-400">
+                          Plataforma: {inscripcion.plataforma}
+                        </p>
+                      )}
 
                       <p className="text-zinc-400">
                         Torneo:{" "}
                         <span className="text-red-500 font-bold">
-                          {inscripcion.torneos?.[0]?.nombre ?? "Sin torneo"}
+                          {torneoDe(inscripcion)?.nombre ?? "Sin torneo"}
                         </span>
+                        {torneoDe(inscripcion)?.juego && (
+                          <span className="text-zinc-500">
+                            {" "}· {torneoDe(inscripcion)?.juego}
+                          </span>
+                        )}
                       </p>
 
                       <p className="text-sm text-zinc-500 mt-3">
