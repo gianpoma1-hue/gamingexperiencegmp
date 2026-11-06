@@ -18,6 +18,8 @@ import Navbar from "@/components/layout/Navbar";
 import Bracket from "@/components/torneo/Bracket";
 import ReglasPartido from "@/components/torneo/ReglasPartido";
 import FaseZonas from "@/components/torneo/FaseZonas";
+import CuentaRegresiva from "@/components/torneo/CuentaRegresiva";
+import { inicioDelTorneo, textoInicio, useFaltaParaInicio } from "@/lib/inicioTorneo";
 import { esFormatoZonas } from "@/lib/zonas";
 import { resolverReglas } from "@/lib/reglas";
 import DMChat from "@/components/mensajes/DMChat";
@@ -34,6 +36,7 @@ interface Torneo {
   jugadores_max: number;
   premio: number;
   fecha: string;
+  hora?: string | null;
   estado: string;
   campeon: string | null;
   reglas?: string | null;
@@ -173,6 +176,11 @@ export default function LlaveTorneoPage() {
     setFase(semisArmadas ? "final" : "zonas");
     setLoading(false);
   }
+
+  // Hora de inicio: la llave se puede armar antes, pero el torneo arranca a esta hora.
+  const inicio = inicioDelTorneo(torneo?.fecha, torneo?.hora);
+  const faltaParaInicio = useFaltaParaInicio(inicio);
+  const antesDelInicio = !!inicio && (faltaParaInicio === null || faltaParaInicio > 0);
 
   if (loading) {
     return (
@@ -351,7 +359,7 @@ export default function LlaveTorneoPage() {
               <div className="min-w-0 px-3 py-3 sm:px-5 sm:py-4">
                 <dt className="text-xs text-zinc-500">Inicio</dt>
                 <dd className="mt-1 text-sm sm:text-xl font-black leading-tight">
-                  {formatearFecha(torneo.fecha)}
+                  {inicio ? textoInicio(inicio, !!torneo.hora) : formatearFecha(torneo.fecha)}
                 </dd>
               </div>
             </dl>
@@ -411,6 +419,10 @@ export default function LlaveTorneoPage() {
                 </span>
                 <ChevronRight className="text-yellow-500 shrink-0" size={18} />
               </button>
+            )}
+
+            {inicio && faltaParaInicio !== null && faltaParaInicio > 0 && (
+              <CuentaRegresiva inicio={inicio} falta={faltaParaInicio} llaveArmada={partidos.length > 0} />
             )}
 
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -473,6 +485,7 @@ export default function LlaveTorneoPage() {
                     partidos={partidosParaBracket}
                     torneoId={id}
                     miUsuario={miUsuario}
+                    reportarHabilitado={!antesDelInicio}
                     escudos={escudos}
                   />
                 ) : (
@@ -480,6 +493,7 @@ export default function LlaveTorneoPage() {
                     <Bracket
                       jugadoresMax={torneo.jugadores_max}
                       miUsuario={miUsuario}
+                      reportarHabilitado={!antesDelInicio}
                       torneoId={id}
                       escudos={escudos}
                       finalTerminada={finalTerminada}

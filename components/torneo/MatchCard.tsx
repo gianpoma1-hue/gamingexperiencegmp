@@ -43,6 +43,8 @@ type MatchCardProps = {
   mapas?: number[][] | null;
 
   miUsuario?: string | null;
+  // false hasta la hora de inicio del torneo: no se puede reportar resultado
+  reportarHabilitado?: boolean;
 };
 
 function iniciales(nombre: string) {
@@ -162,6 +164,7 @@ export default function MatchCard({
   penalesJugador2,
   ganador,
   mapas,
+  reportarHabilitado = true,
   miUsuario,
 }: MatchCardProps) {
   const detalleMapas = (mapas ?? []).filter(
@@ -228,8 +231,9 @@ export default function MatchCard({
 
               <button
                 onClick={() => setReporteAbierto(true)}
-                title="Reportar resultado"
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 transition"
+                disabled={!reportarHabilitado}
+                title={reportarHabilitado ? "Reportar resultado" : "Se habilita a la hora de inicio del torneo"}
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 transition disabled:cursor-not-allowed disabled:text-zinc-600 disabled:hover:bg-transparent"
               >
                 <ImageUp size={12} />
                 Reportar

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
-import { Check, ImagePlus, Pencil, Trash2, UserPlus, UserX, Users, X } from "lucide-react";
+import { ArrowLeftRight, Check, ImagePlus, Pencil, Trash2, UserPlus, UserX, Users, X } from "lucide-react";
 
 type Torneo = {
   id: string;
@@ -52,6 +52,19 @@ function AdminUsuariosTorneoContenido() {
   const [nombreEditando, setNombreEditando] = useState("");
   const [guardandoNombre, setGuardandoNombre] = useState(false);
 
+  // Partidos del torneo (si ya empezó): nombre en la llave -> partidos jugados / pendientes
+  const [partidosTorneo, setPartidosTorneo] = useState<
+    { jugador1: string | null; jugador2: string | null; estado: string }[]
+  >([]);
+  const [reemplazandoId, setReemplazandoId] = useState<string | null>(null);
+  const [reemplazoElegido, setReemplazoElegido] = useState("");
+  const [reemplazando, setReemplazando] = useState(false);
+
+  const torneoIniciado = partidosTorneo.length > 0;
+  const nombreEnLlave = (i: Inscripcion) => i.equipo ?? i.usuario;
+  const estaEnLlave = (i: Inscripcion) =>
+    partidosTorneo.some((p) => p.jugador1 === nombreEnLlave(i) || p.jugador2 === nombreEnLlave(i));
+
   useEffect(() => {
     cargarTorneos();
   }, []);
@@ -91,6 +104,14 @@ function AdminUsuariosTorneoContenido() {
     if (!error) {
       setInscripciones((data as Inscripcion[]) || []);
     }
+
+    const { data: partidosData } = await supabase
+      .from("partidos")
+      .select("jugador1, jugador2, estado")
+      .eq("torneo_id", idTorneo);
+
+    setPartidosTorneo(partidosData || []);
+    setReemplazandoId(null);
 
     setCargandoLista(false);
     setLoading(false);
@@ -284,9 +305,82 @@ function AdminUsuariosTorneoContenido() {
     );
   }
 
+  // Torneo ya iniciado: el equipo que entra ocupa los partidos pendientes del que se baja.
+  async function reemplazarEquipo(sale: Inscripcion) {
+    const entra = inscripciones.find((x) => x.id === reemplazoElegido);
+
+    if (!entra) {
+      alert("Elegí quién entra en su lugar.");
+      return;
+    }
+
+    const viejo = nombreEnLlave(sale);
+    const nuevo = nombreEnLlave(entra);
+
+    const jugados = partidosTorneo.filter(
+      (p) => p.estado === "Finalizado" && (p.jugador1 === viejo || p.jugador2 === viejo)
+    ).length;
+
+    const confirmar = window.confirm(
+      `¿Reemplazar a "${viejo}" por "${nuevo}"?\n\n` +
+        `"${nuevo}" pasa a jugar todos los partidos pendientes de "${viejo}" y se borra la inscripción de "${viejo}".` +
+        (jugados > 0
+          ? `\n\nOjo: "${viejo}" ya jugó ${jugados} partido(s). Esos resultados quedan a su nombre.`
+          : "")
+    );
+
+    if (!confirmar) return;
+
+    setReemplazando(true);
+
+    const cambiar = (lado: 1 | 2) =>
+      supabase
+        .from("partidos")
+        .update(
+          lado === 1
+            ? { jugador1: nuevo, capitan1: entra.usuario }
+            : { jugador2: nuevo, capitan2: entra.usuario }
+        )
+        .eq("torneo_id", torneoId)
+        .eq(lado === 1 ? "jugador1" : "jugador2", viejo)
+        .neq("estado", "Finalizado")
+        .select("id");
+
+    const [r1, r2] = await Promise.all([cambiar(1), cambiar(2)]);
+    const falla = r1.error ?? r2.error;
+
+    if (falla) {
+      alert("No se pudieron actualizar los partidos: " + falla.message);
+      setReemplazando(false);
+      return;
+    }
+
+    const cambiados = (r1.data?.length ?? 0) + (r2.data?.length ?? 0);
+
+    const { error: errorBorrar } = await supabase
+      .from("inscripciones")
+      .delete()
+      .eq("id", sale.id);
+
+    setReemplazando(false);
+
+    if (errorBorrar) {
+      alert(
+        `Se pasaron ${cambiados} partido(s) a "${nuevo}", pero no se pudo borrar la inscripción de "${viejo}". Quitala a mano.`
+      );
+    } else {
+      alert(`Listo: "${nuevo}" entró en lugar de "${viejo}" (${cambiados} partido(s) pendientes actualizados).`);
+    }
+
+    cargarInscripciones(torneoId);
+  }
+
   async function quitarUsuario(inscripcion: Inscripcion) {
     const confirmar = window.confirm(
-      `¿Sacar a ${inscripcion.nombre} (${inscripcion.usuario}) de este torneo?`
+      `¿Sacar a ${inscripcion.nombre} (${inscripcion.usuario}) de este torneo?` +
+        (estaEnLlave(inscripcion)
+          ? `\n\nOjo: "${nombreEnLlave(inscripcion)}" ya está en la llave y sus partidos NO cambian al quitarlo. Si entra otro equipo en su lugar, usá "Reemplazar".`
+          : "")
     );
 
     if (!confirmar) return;
@@ -632,17 +726,83 @@ function AdminUsuariosTorneoContenido() {
                               </>
                             )}
                           </div>
+
+                          {reemplazandoId === i.id && (() => {
+                            const candidatos = inscripciones.filter(
+                              (x) => x.id !== i.id && !estaEnLlave(x)
+                            );
+
+                            return (
+                              <div className="mt-3 rounded-lg border border-zinc-700 bg-black/40 p-3">
+                                {candidatos.length === 0 ? (
+                                  <p className="text-sm text-zinc-400">
+                                    Primero agregá al equipo que entra con &quot;Agregar usuario al
+                                    torneo&quot; (arriba). Después volvé a tocar Reemplazar.
+                                  </p>
+                                ) : (
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-sm text-zinc-300">
+                                      Entra en lugar de <b>{nombreEnLlave(i)}</b>:
+                                    </span>
+                                    <select
+                                      value={reemplazoElegido}
+                                      onChange={(e) => setReemplazoElegido(e.target.value)}
+                                      className="rounded-lg bg-black border border-zinc-700 px-3 py-1.5 text-sm outline-none focus:border-red-600"
+                                    >
+                                      <option value="">Elegí…</option>
+                                      {candidatos.map((x) => (
+                                        <option key={x.id} value={x.id}>
+                                          {nombreEnLlave(x)} ({x.usuario})
+                                          {x.estado_pago !== "confirmado" ? " · pago sin confirmar" : ""}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      onClick={() => reemplazarEquipo(i)}
+                                      disabled={reemplazando || !reemplazoElegido}
+                                      className="flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold hover:bg-green-500 disabled:opacity-50"
+                                    >
+                                      <Check size={14} />
+                                      {reemplazando ? "Reemplazando..." : "Confirmar reemplazo"}
+                                    </button>
+                                  </div>
+                                )}
+                                <button
+                                  onClick={() => setReemplazandoId(null)}
+                                  className="mt-2 text-xs font-semibold text-zinc-500 hover:text-white"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => quitarUsuario(i)}
-                        title="Sacar del torneo"
-                        className="flex items-center gap-2 bg-zinc-800 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition shrink-0"
-                      >
-                        <UserX size={14} />
-                        Quitar
-                      </button>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        {torneoIniciado && estaEnLlave(i) && (
+                          <button
+                            onClick={() => {
+                              setReemplazandoId(i.id);
+                              setReemplazoElegido("");
+                            }}
+                            title="Reemplazar por otro equipo en la llave"
+                            className="flex items-center gap-2 bg-zinc-800 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-semibold transition"
+                          >
+                            <ArrowLeftRight size={14} />
+                            Reemplazar
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => quitarUsuario(i)}
+                          title="Sacar del torneo"
+                          className="flex items-center gap-2 bg-zinc-800 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition"
+                        >
+                          <UserX size={14} />
+                          Quitar
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

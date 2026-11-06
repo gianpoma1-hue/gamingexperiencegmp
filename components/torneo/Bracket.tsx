@@ -30,6 +30,7 @@ type Props = {
   jugadoresMax: number;
   partidos: Partido[];
   miUsuario?: string | null;
+  reportarHabilitado?: boolean;
   torneoId: string;
 
   // Escudos por nombre de equipo (o de usuario en torneos individuales)
@@ -76,6 +77,7 @@ function trazo(l: Linea) {
 export default function Bracket({
   partidos,
   miUsuario,
+  reportarHabilitado = true,
   torneoId,
   escudos = {},
   finalTerminada,
@@ -192,6 +194,7 @@ export default function Bracket({
         ganador={p.ganador ?? null}
         mapas={p.mapas ?? null}
         miUsuario={miUsuario}
+        reportarHabilitado={reportarHabilitado}
       />
     );
   }

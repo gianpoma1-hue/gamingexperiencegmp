@@ -22,6 +22,7 @@ type Props = {
   partidos: Partido[];
   torneoId: string;
   miUsuario?: string | null;
+  reportarHabilitado?: boolean;
   escudos?: Record<string, string>;
 };
 
@@ -31,6 +32,7 @@ export default function FaseZonas({
   partidos,
   torneoId,
   miUsuario,
+  reportarHabilitado = true,
   escudos = {},
 }: Props) {
   const delaFase = partidos.filter((p) => p.ronda === 1);
@@ -163,6 +165,7 @@ export default function FaseZonas({
                     penalesJugador2={p.penales_jugador2}
                     ganador={p.ganador ?? null}
                     miUsuario={miUsuario}
+                    reportarHabilitado={reportarHabilitado}
                   />
                 ))}
               </div>

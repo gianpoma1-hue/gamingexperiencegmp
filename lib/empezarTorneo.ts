@@ -141,7 +141,7 @@ if (torneoData?.jugadores_max === 6) {
     .update({ estado: "En curso" })
     .eq("id", torneoId);
 
-  alert("¡Torneo iniciado! Se armaron las 2 zonas por sorteo.");
+  alert("¡Llave armada! Se armaron las 2 zonas por sorteo. Los jugadores ya ven sus cruces y la cuenta regresiva hasta la hora de inicio.");
   return true;
 }
 
@@ -212,6 +212,6 @@ while (partidosRonda > 1) {
       })
       .eq("id", torneoId);
 
-    alert("¡Torneo iniciado correctamente!");
+    alert("¡Llave armada! Los jugadores ya ven sus cruces y la cuenta regresiva hasta la hora de inicio.");
     return true;
 }
