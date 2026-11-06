@@ -3,6 +3,7 @@
 import { fechaTorneo, horaTorneo } from "@/lib/formatoFecha";
 import { useRouter } from "next/navigation";
 import { Swords } from "lucide-react";
+import CheckIn from "@/components/torneo/CheckIn";
 
 export type TorneoCardData = {
   id: string;
@@ -122,6 +123,17 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
           </div>
         )}
       </div>
+
+      {/* Check-in (solo para quien tiene el pago confirmado) */}
+      {torneo.miInscripcion === "confirmado" && (
+        <CheckIn
+          torneoId={torneo.id}
+          fecha={torneo.fecha}
+          hora={torneo.hora}
+          estadoTorneo={torneo.estado}
+          className="mt-6"
+        />
+      )}
 
       {/* Acción según el estado del torneo */}
       {torneo.estado === "En curso" ? (

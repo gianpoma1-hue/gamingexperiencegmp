@@ -23,6 +23,7 @@ type Partido = {
 
   mapas?: number[][] | null;
   horario?: string | null;
+  wo?: boolean;
 
   ganador?: string | null;
 };
@@ -195,6 +196,7 @@ export default function Bracket({
         ganador={p.ganador ?? null}
         mapas={p.mapas ?? null}
         horario={p.horario ?? null}
+        wo={!!p.wo}
         miUsuario={miUsuario}
         reportarHabilitado={reportarHabilitado}
       />

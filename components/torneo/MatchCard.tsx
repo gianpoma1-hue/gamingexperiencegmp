@@ -45,6 +45,8 @@ type MatchCardProps = {
 
   // Día y hora del partido (ISO)
   horario?: string | null;
+  // Ganado por W.O. (el rival no se presentó)
+  wo?: boolean;
 
   miUsuario?: string | null;
   // false hasta la hora de inicio del torneo: no se puede reportar resultado
@@ -169,6 +171,7 @@ export default function MatchCard({
   ganador,
   mapas,
   horario,
+  wo = false,
   reportarHabilitado = true,
   miUsuario,
 }: MatchCardProps) {
@@ -193,7 +196,7 @@ export default function MatchCard({
   const listo = !!jugador1 && !!jugador2;
 
   const estado = finalizado
-    ? { texto: "Finalizado", punto: "bg-zinc-500", color: "text-zinc-400" }
+    ? { texto: wo ? "Finalizado · W.O." : "Finalizado", punto: "bg-zinc-500", color: "text-zinc-400" }
     : listo
     ? { texto: textoHorario(horario) ?? "Por jugar", punto: "bg-[var(--accent)]", color: "text-[var(--accent)]" }
     : { texto: "Por definir", punto: "bg-zinc-700", color: "text-zinc-500" };

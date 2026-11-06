@@ -18,6 +18,9 @@ export interface ResultadoPartido {
 
   // Detalle por mapa en partidos al mejor de 3: [[13,9],[8,13],[13,11]]
   mapas?: number[][] | null;
+
+  // Ganado por W.O. (el rival no se presentó)
+  wo?: boolean;
 }
 
 // Formato de 6 equipos (2 zonas de 3): cuando terminan las dos zonas, arma las
@@ -93,6 +96,7 @@ export async function guardarResultado({
   penalesJugador2,
   mapas,
   ganadorDirecto,
+  wo,
 }: ResultadoPartido) {
   const { data: partido, error } = await supabase
     .from("partidos")
@@ -197,6 +201,7 @@ export async function guardarResultado({
       ganador,
       estado: "Finalizado",
       ...(mapas !== undefined ? { mapas } : {}),
+      ...(wo ? { wo: true } : {}),
     })
     .eq("id", partidoId);
 
@@ -313,6 +318,7 @@ export async function editarResultado({
   penalesJugador2,
   mapas,
   ganadorDirecto,
+  wo,
 }: ResultadoPartido) {
   const { data: partido, error } = await supabase
     .from("partidos")
@@ -476,6 +482,7 @@ export async function editarResultado({
       ganador,
       estado: "Finalizado",
       ...(mapas !== undefined ? { mapas } : {}),
+      ...(wo || partido.wo ? { wo: !!wo } : {}),
     })
     .eq("id", partidoId);
 

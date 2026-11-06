@@ -7,8 +7,8 @@ import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
 import { guardarResultado, editarResultado } from "@/lib/tournament";
 import { esFormatoZonas, zonaDelPartido, fechaDelPartido } from "@/lib/zonas";
-import { horarioAInput, inputAHorario, textoHorario } from "@/lib/inicioTorneo";
-import { CalendarClock } from "lucide-react";
+import { horarioAInput, inputAHorario, textoHorario, inicioDelTorneo } from "@/lib/inicioTorneo";
+import { CalendarClock, UserCheck, UserX } from "lucide-react";
 
 const JUEGOS_CON_GOLES = ["EA SPORTS FC 26", "EA SPORTS FC 27"];
 
@@ -36,6 +36,9 @@ interface Partido {
 
   // Día y hora del partido (lo carga el admin)
   horario: string | null;
+
+  // Ganado por W.O.
+  wo?: boolean | null;
 }
 
 // Los 3 casilleros de mapas de un partido al mejor de 3 (vacíos si no hay datos)
@@ -88,6 +91,9 @@ export default function AdministrarResultadosPage() {
   // Horario que se está editando en cada partido (valor del campo fecha y hora)
   const [horarios, setHorarios] = useState<Record<string, string>>({});
   const [guardandoHorarioId, setGuardandoHorarioId] = useState<string | null>(null);
+  // Check-in por usuario de la inscripción (jugador o capitán). null = no disponible.
+  const [checkins, setCheckins] = useState<Record<string, string | null> | null>(null);
+  const [inicioTorneo, setInicioTorneo] = useState<Date | null>(null);
 
   async function guardarHorario(partido: Partido) {
     const valor = horarios[partido.id] ?? horarioAInput(partido.horario);
@@ -180,9 +186,22 @@ export default function AdministrarResultadosPage() {
   async function cargarTorneoYPartidos() {
     const { data: torneoData } = await supabase
       .from("torneos")
-      .select("nombre, juego, jugadores_max")
+      .select("nombre, juego, jugadores_max, fecha, hora")
       .eq("id", id)
       .single();
+
+    setInicioTorneo(inicioDelTorneo(torneoData?.fecha, torneoData?.hora));
+
+    const { data: inscriptos, error: errorCheckin } = await supabase
+      .from("inscripciones")
+      .select("usuario, checkin_at")
+      .eq("torneo_id", id);
+
+    setCheckins(
+      errorCheckin
+        ? null
+        : Object.fromEntries((inscriptos ?? []).map((i) => [i.usuario, i.checkin_at]))
+    );
 
     setJuego(torneoData?.juego ?? "");
     setNombreTorneo(torneoData?.nombre ?? "");
@@ -200,6 +219,43 @@ export default function AdministrarResultadosPage() {
     }
 
     setLoading(false);
+  }
+
+  // W.O.: el que se presentó gana. En zonas hace falta un marcador
+  // (3-0 en juegos con goles, 13-0 en los de rondas); en el resto, ganador directo.
+  async function darWO(partido: Partido, ganaLado: 1 | 2) {
+    const ganador = ganaLado === 1 ? partido.jugador1 : partido.jugador2;
+    const ausente = ganaLado === 1 ? partido.jugador2 : partido.jugador1;
+
+    const ok = window.confirm(
+      `¿Dar W.O. a favor de "${ganador}"?\n\n"${ausente}" pierde el partido por no presentarse. Esto actualiza la llave.`
+    );
+    if (!ok) return;
+
+    const tanto = esJuegoConGoles ? 3 : 13;
+    const enZona = formatoZonas && partido.ronda === 1;
+
+    try {
+      setGuardando(true);
+      await guardarResultado({
+        partidoId: partido.id,
+        torneoId: id as string,
+        juego,
+        wo: true,
+        ...(enZona
+          ? {
+              golesJugador1: ganaLado === 1 ? tanto : 0,
+              golesJugador2: ganaLado === 2 ? tanto : 0,
+            }
+          : { ganadorDirecto: ganador }),
+      });
+      await cargarTorneoYPartidos();
+      avisar(`W.O. cargado: avanza "${ganador}".`, "exito");
+    } catch (error: any) {
+      avisar(error.message, "error");
+    } finally {
+      setGuardando(false);
+    }
   }
 
   async function guardar(partido: Partido) {
@@ -352,6 +408,57 @@ export default function AdministrarResultadosPage() {
                         : "Hora de Argentina. Todavía no están definidos los dos equipos."}
                   </span>
                 </div>
+
+                {/* Check-in de cada lado + W.O. */}
+                {checkins && partido.capitan1 && partido.capitan2 && (() => {
+                  const hizo1 = !!checkins[partido.capitan1];
+                  const hizo2 = !!checkins[partido.capitan2];
+                  const yaEmpezo = !!inicioTorneo && Date.now() >= inicioTorneo.getTime();
+                  const ofrecerWO =
+                    partido.estado !== "Finalizado" && yaEmpezo && hizo1 !== hizo2;
+
+                  return (
+                    <div className="mb-6 rounded-xl bg-black/40 px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                        <span className="font-semibold text-zinc-300">Check-in</span>
+                        {([
+                          [partido.jugador1, hizo1],
+                          [partido.jugador2, hizo2],
+                        ] as const).map(([nombre, hizo]) => (
+                          <span
+                            key={nombre}
+                            className={`flex items-center gap-1.5 ${hizo ? "text-green-400" : "text-zinc-500"}`}
+                          >
+                            {hizo ? <UserCheck size={16} /> : <UserX size={16} />}
+                            {nombre}
+                            <span className="text-xs">{hizo ? "listo" : "sin check-in"}</span>
+                          </span>
+                        ))}
+                        {partido.wo && (
+                          <span className="rounded-md bg-yellow-500/15 px-2 py-0.5 text-xs font-bold text-yellow-400">
+                            Ganado por W.O.
+                          </span>
+                        )}
+                      </div>
+
+                      {ofrecerWO && (
+                        <button
+                          onClick={() => darWO(partido, hizo1 ? 1 : 2)}
+                          disabled={guardando}
+                          className="mt-3 w-full rounded-lg border border-yellow-600 bg-yellow-950/30 py-2 text-sm font-bold text-yellow-400 transition hover:bg-yellow-900/40 disabled:opacity-50"
+                        >
+                          Dar W.O. a favor de {hizo1 ? partido.jugador1 : partido.jugador2}
+                        </button>
+                      )}
+
+                      {partido.estado !== "Finalizado" && yaEmpezo && !hizo1 && !hizo2 && (
+                        <p className="mt-2 text-xs text-zinc-500">
+                          Ninguno de los dos hizo check-in: decidí vos (cargá el resultado o eliminá a uno desde Usuarios).
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {esBO3(partido) ? (
                   <>

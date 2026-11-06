@@ -19,6 +19,7 @@ import Bracket from "@/components/torneo/Bracket";
 import ReglasPartido from "@/components/torneo/ReglasPartido";
 import FaseZonas from "@/components/torneo/FaseZonas";
 import CuentaRegresiva from "@/components/torneo/CuentaRegresiva";
+import CheckIn from "@/components/torneo/CheckIn";
 import { inicioDelTorneo, textoInicio, useFaltaParaInicio } from "@/lib/inicioTorneo";
 import { esFormatoZonas } from "@/lib/zonas";
 import { resolverReglas } from "@/lib/reglas";
@@ -61,6 +62,7 @@ interface Partido {
   penales_jugador1: number | null;
   penales_jugador2: number | null;
   mapas?: number[][] | null;
+  wo?: boolean | null;
   horario?: string | null;
 
   estado: string;
@@ -275,6 +277,7 @@ export default function LlaveTorneoPage() {
     ganador: p.ganador,
     mapas: p.mapas ?? null,
     horario: p.horario ?? null,
+    wo: !!p.wo,
   }));
 
   const estiloPagina = {
@@ -426,6 +429,14 @@ export default function LlaveTorneoPage() {
             {inicio && faltaParaInicio !== null && faltaParaInicio > 0 && (
               <CuentaRegresiva inicio={inicio} falta={faltaParaInicio} llaveArmada={partidos.length > 0} />
             )}
+
+            <CheckIn
+              torneoId={torneo.id}
+              fecha={torneo.fecha}
+              hora={torneo.hora}
+              estadoTorneo={torneo.estado}
+              className="mb-6"
+            />
 
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-3 text-2xl font-black">
