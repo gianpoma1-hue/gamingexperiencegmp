@@ -104,6 +104,13 @@ premios reales.
                 Términos y Condiciones
               </button>
 
+              <button
+                onClick={() => router.push("/privacidad")}
+                className="text-left hover:text-red-500 transition"
+              >
+                Política de Privacidad
+              </button>
+
             </div>
 
           </div>

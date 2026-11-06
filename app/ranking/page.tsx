@@ -6,6 +6,7 @@ import Footer from "@/components/footer/Footer";
 import TopPodium from "@/components/ranking/TopPodium";
 import RankingList from "@/components/ranking/RankingList";
 import RankingPrizes from "@/components/ranking/RankingPrizes";
+import RankingProximamente from "@/components/ranking/RankingProximamente";
 import GameSelector from "@/components/reglamento/GameSelector";
 import { supabase } from "@/lib/supabase";
 import { juegos } from "@/lib/games";
@@ -22,7 +23,24 @@ export interface RankingPlayer {
   torneos_ganados: number;
 }
 
+// Cambiar a true para mostrar el ranking real (podio, tabla y premios).
+const RANKING_HABILITADO = false;
+
 export default function RankingPage() {
+  if (!RANKING_HABILITADO) {
+    return (
+      <main className="min-h-screen bg-black text-white">
+        <Navbar />
+        <RankingProximamente />
+        <Footer />
+      </main>
+    );
+  }
+
+  return <RankingActual />;
+}
+
+function RankingActual() {
   const [players, setPlayers] = useState<RankingPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [modo, setModo] = useState<"individual" | "equipo">("individual");

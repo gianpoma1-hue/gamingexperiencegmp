@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { ruta: "/register", prioridad: 0.5 },
     { ruta: "/contacto", prioridad: 0.4 },
     { ruta: "/terminos", prioridad: 0.3 },
+    { ruta: "/privacidad", prioridad: 0.3 },
   ];
 
   return rutas.map(({ ruta, prioridad }) => ({

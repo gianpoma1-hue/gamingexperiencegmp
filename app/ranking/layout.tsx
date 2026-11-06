@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Ranking de jugadores",
+  title: "Ranking mensual",
   description:
-    "Mirá quiénes lideran el ranking de GMP Gaming y qué premios hay en juego.",
+    "Próximamente: un ranking mensual donde cada partido suma y los mejores ganan premios en efectivo.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

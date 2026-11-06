@@ -178,6 +178,18 @@ export default function RegisterForm() {
           {loading ? "Creando cuenta..." : "Registrarse"}
         </button>
 
+        <p className="text-center text-xs text-zinc-500 leading-relaxed">
+          Al registrarte aceptás los{" "}
+          <Link href="/terminos" className="text-zinc-300 underline hover:text-red-400">
+            Términos y Condiciones
+          </Link>{" "}
+          y la{" "}
+          <Link href="/privacidad" className="text-zinc-300 underline hover:text-red-400">
+            Política de Privacidad
+          </Link>
+          .
+        </p>
+
       </form>
 
       <p className="mt-6 text-center text-zinc-400">
