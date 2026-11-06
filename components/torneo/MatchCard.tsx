@@ -12,6 +12,9 @@ type MatchCardProps = {
   // Número de partido dentro del torneo (opcional, se muestra en el encabezado)
   numero?: number;
 
+  // Texto que reemplaza a "P1" en el encabezado (ej: "Fecha 1")
+  etiqueta?: string;
+
   seed1?: number;
   seed2?: number;
 
@@ -35,6 +38,9 @@ type MatchCardProps = {
   penalesJugador2: number | null;
 
   ganador?: string | null;
+
+  // Detalle por mapa en partidos al mejor de 3: [[13,9],[8,13],[13,11]]
+  mapas?: number[][] | null;
 
   miUsuario?: string | null;
 };
@@ -141,6 +147,7 @@ export default function MatchCard({
   id,
   torneoId,
   numero,
+  etiqueta,
   jugador1,
   jugador2,
   escudo1,
@@ -154,8 +161,12 @@ export default function MatchCard({
   penalesJugador1,
   penalesJugador2,
   ganador,
+  mapas,
   miUsuario,
 }: MatchCardProps) {
+  const detalleMapas = (mapas ?? []).filter(
+    (m) => Array.isArray(m) && m.length === 2 && m[0] != null && m[1] != null
+  );
   const [chatAbierto, setChatAbierto] = useState(false);
   const [reporteAbierto, setReporteAbierto] = useState(false);
 
@@ -195,8 +206,12 @@ export default function MatchCard({
             <span className={`text-[11px] font-semibold truncate ${estado.color}`}>
               {estado.texto}
             </span>
-            {numero !== undefined && (
-              <span className="text-[11px] text-zinc-600">· P{numero}</span>
+            {etiqueta ? (
+              <span className="text-[11px] text-zinc-500">· {etiqueta}</span>
+            ) : (
+              numero !== undefined && (
+                <span className="text-[11px] text-zinc-600">· P{numero}</span>
+              )
             )}
           </div>
 
@@ -246,6 +261,20 @@ export default function MatchCard({
           perdio={gano1}
           esMio={soyJugador2}
         />
+
+        {/* Detalle mapa por mapa (al mejor de 3) */}
+        {detalleMapas.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-zinc-800/80 bg-white/[0.02] px-3 py-2">
+            {detalleMapas.map(([r1, r2], i) => (
+              <span key={i} className="flex items-center gap-1.5 text-[11px] tabular-nums">
+                <span className="font-semibold text-zinc-500">Mapa {i + 1}</span>
+                <span className={r1 > r2 ? "font-bold text-[var(--accent)]" : "text-zinc-400"}>{r1}</span>
+                <span className="text-zinc-600">-</span>
+                <span className={r2 > r1 ? "font-bold text-[var(--accent)]" : "text-zinc-400"}>{r2}</span>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {chatAbierto && miUsuario && (

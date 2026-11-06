@@ -1,5 +1,6 @@
 ﻿import { supabase } from "./supabase";
-import { actualizarRanking } from "./ranking";
+import { actualizarRanking, JUEGOS_CON_GOLES } from "./ranking";
+import { esFormatoZonas, calcularSemifinales } from "./zonas";
 
 export interface ResultadoPartido {
   partidoId: string;
@@ -14,6 +15,72 @@ export interface ResultadoPartido {
 
   // Modo "ganador directo" (ej: Truco Blyts, y cualquier juego sin goles)
   ganadorDirecto?: string;
+
+  // Detalle por mapa en partidos al mejor de 3: [[13,9],[8,13],[13,11]]
+  mapas?: number[][] | null;
+}
+
+// Formato de 6 equipos (2 zonas de 3): cuando terminan las dos zonas, arma las
+// semifinales (1° de una zona vs 2° de la otra). Si faltan partidos o hay un
+// empate sin resolver, deja las semifinales sin jugadores.
+async function rellenarSemifinales(torneoId: string) {
+  const { data: partidos } = await supabase
+    .from("partidos")
+    .select("*")
+    .eq("torneo_id", torneoId);
+
+  if (!partidos) return;
+
+  const cruces = calcularSemifinales(partidos);
+
+  const capitanDe = new Map<string, string | null>();
+  partidos
+    .filter((p: any) => p.ronda === 1)
+    .forEach((p: any) => {
+      if (p.jugador1) capitanDe.set(p.jugador1, p.capitan1 ?? null);
+      if (p.jugador2) capitanDe.set(p.jugador2, p.capitan2 ?? null);
+    });
+
+  for (const numero of [1, 2]) {
+    const semifinal = partidos.find(
+      (p: any) => p.ronda === 2 && p.numero_partido === numero
+    );
+
+    // No tocamos una semifinal que ya se jugó
+    if (!semifinal || semifinal.estado === "Finalizado") continue;
+
+    const cruce = cruces?.find((c) => c.numero === numero);
+
+    const { error } = await supabase
+      .from("partidos")
+      .update({
+        jugador1: cruce?.jugador1 ?? null,
+        jugador2: cruce?.jugador2 ?? null,
+        capitan1: cruce ? capitanDe.get(cruce.jugador1) ?? null : null,
+        capitan2: cruce ? capitanDe.get(cruce.jugador2) ?? null : null,
+      })
+      .eq("id", semifinal.id);
+
+    if (error) throw error;
+  }
+}
+
+// Solo los juegos de fútbol definen un empate por penales. Si no se sabe el
+// juego, se mantiene el comportamiento de siempre.
+function admitePenales(juego?: string) {
+  return !juego || JUEGOS_CON_GOLES.includes(juego);
+}
+
+async function esPartidoDeZona(torneoId: string, ronda: number) {
+  if (ronda !== 1) return false;
+
+  const { data } = await supabase
+    .from("torneos")
+    .select("jugadores_max")
+    .eq("id", torneoId)
+    .single();
+
+  return esFormatoZonas(data?.jugadores_max);
 }
 
 export async function guardarResultado({
@@ -24,6 +91,7 @@ export async function guardarResultado({
   golesJugador2,
   penalesJugador1,
   penalesJugador2,
+  mapas,
   ganadorDirecto,
 }: ResultadoPartido) {
   const { data: partido, error } = await supabase
@@ -39,6 +107,14 @@ export async function guardarResultado({
   if (partido.estado === "Finalizado") {
     throw new Error(
       "Este partido ya tiene un resultado cargado. No se puede volver a guardar (para evitar que el ranking sume el mismo partido dos veces)."
+    );
+  }
+
+  const esZona = await esPartidoDeZona(torneoId, partido.ronda);
+
+  if (esZona && ganadorDirecto) {
+    throw new Error(
+      "En la fase de zonas hay que cargar las rondas de cada equipo (se usan para la diferencia de rondas)."
     );
   }
 
@@ -77,6 +153,18 @@ export async function guardarResultado({
       ganador = partido.jugador2;
       ganadorCapitan = partido.capitan2 ?? null;
     } else {
+      if (esZona) {
+        throw new Error(
+          "En la fase de zonas no puede haber empate: cargá el resultado final de rondas (incluyendo tiempo extra si lo hubo)."
+        );
+      }
+
+      if (!admitePenales(juego)) {
+        throw new Error(
+          "No puede haber empate: cargá el resultado final (rondas o mapas ganados, incluyendo tiempo extra si lo hubo)."
+        );
+      }
+
       if (penalesJugador1 == null || penalesJugador2 == null) {
         throw new Error("Completá los penales.");
       }
@@ -108,6 +196,7 @@ export async function guardarResultado({
       penales_jugador2: penalesFinal2,
       ganador,
       estado: "Finalizado",
+      ...(mapas !== undefined ? { mapas } : {}),
     })
     .eq("id", partidoId);
 
@@ -159,6 +248,12 @@ export async function guardarResultado({
 
     if (torneoError) throw torneoError;
 
+    return ganador;
+  }
+
+  // Fase de zonas: no se avanza ganador, se arman las semifinales con las tablas
+  if (esZona) {
+    await rellenarSemifinales(torneoId);
     return ganador;
   }
 
@@ -216,6 +311,7 @@ export async function editarResultado({
   golesJugador2,
   penalesJugador1,
   penalesJugador2,
+  mapas,
   ganadorDirecto,
 }: ResultadoPartido) {
   const { data: partido, error } = await supabase
@@ -255,7 +351,25 @@ export async function editarResultado({
   // editar para no romper el cuadro sin que el admin lo note.
   let siguientePartido: any = null;
 
-  if (!esFinal) {
+  const esZonaEdicion = await esPartidoDeZona(torneoId, partido.ronda);
+
+  if (esZonaEdicion) {
+    const { data: semisJugadas } = await supabase
+      .from("partidos")
+      .select("id")
+      .eq("torneo_id", torneoId)
+      .eq("ronda", 2)
+      .eq("estado", "Finalizado")
+      .limit(1);
+
+    if (semisJugadas && semisJugadas.length > 0) {
+      throw new Error(
+        "No se puede editar este resultado porque ya hay semifinales con resultado cargado. Primero corregí (o volvé a jugar) los partidos posteriores."
+      );
+    }
+  }
+
+  if (!esFinal && !esZonaEdicion) {
     const siguienteRonda = partido.ronda + 1;
     const siguienteNumero = Math.ceil(partido.numero_partido / 2);
 
@@ -277,6 +391,14 @@ export async function editarResultado({
   }
 
   // Calcular el resultado NUEVO con la misma lógica que al guardar
+  const esZona = await esPartidoDeZona(torneoId, partido.ronda);
+
+  if (esZona && ganadorDirecto) {
+    throw new Error(
+      "En la fase de zonas hay que cargar las rondas de cada equipo (se usan para la diferencia de rondas)."
+    );
+  }
+
   let ganador: string;
   let ganadorCapitan: string | null;
 
@@ -310,6 +432,18 @@ export async function editarResultado({
       ganador = partido.jugador2;
       ganadorCapitan = partido.capitan2 ?? null;
     } else {
+      if (esZona) {
+        throw new Error(
+          "En la fase de zonas no puede haber empate: cargá el resultado final de rondas (incluyendo tiempo extra si lo hubo)."
+        );
+      }
+
+      if (!admitePenales(juego)) {
+        throw new Error(
+          "No puede haber empate: cargá el resultado final (rondas o mapas ganados, incluyendo tiempo extra si lo hubo)."
+        );
+      }
+
       if (penalesJugador1 == null || penalesJugador2 == null) {
         throw new Error("Completá los penales.");
       }
@@ -341,6 +475,7 @@ export async function editarResultado({
       penales_jugador2: penalesFinal2,
       ganador,
       estado: "Finalizado",
+      ...(mapas !== undefined ? { mapas } : {}),
     })
     .eq("id", partidoId);
 
@@ -375,6 +510,12 @@ export async function editarResultado({
       golesJugador2: golesFinal2,
       esFinal,
     });
+  }
+
+  // Fase de zonas: recalcular tablas y semifinales
+  if (esZona) {
+    await rellenarSemifinales(torneoId);
+    return ganador;
   }
 
   // Si era la final, actualizar el campeón

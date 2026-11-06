@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
 import { juegos, jugadoresPorEquipo } from "@/lib/games";
+import { OPCIONES_REGLAS, etiquetaReglas, resolverReglas, type ReglasId } from "@/lib/reglas";
 
 const JUEGOS_CON_EQUIPO = [
   "EA SPORTS FC 26",
@@ -17,7 +18,11 @@ const JUEGOS_CON_EQUIPO = [
 ];
 
 const OPCIONES_JUGADORES = [2,4,8,16,32,64];
-const OPCIONES_EQUIPOS = [2,4,8,16,32];
+const OPCIONES_EQUIPOS = [2,4,6,8,16,32];
+
+// Cómo se muestra cada opción (el 6 usa formato especial de zonas)
+const etiquetaCantidad = (n: number) =>
+  n === 6 ? "6 (2 zonas de 3 + semifinales y final)" : String(n);
 
 export default function NuevoTorneoPage() {
   const router = useRouter();
@@ -35,7 +40,10 @@ export default function NuevoTorneoPage() {
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [reglas, setReglas] = useState<ReglasId>("auto");
   const [estado] = useState("Abierto");
+  const [visible, setVisible] = useState(true);
+  const [notificar, setNotificar] = useState(true);
 
   const permiteEquipo = JUEGOS_CON_EQUIPO.includes(juego);
 
@@ -69,7 +77,11 @@ export default function NuevoTorneoPage() {
         fecha,
         hora,
         descripcion,
+        ...(reglas !== "auto" ? { reglas } : {}),
         estado,
+        visible,
+        // Un torneo de prueba nunca avisa a los jugadores
+        notificar: visible && notificar,
       });
 
     setGuardando(false);
@@ -168,7 +180,7 @@ export default function NuevoTorneoPage() {
                 >
                   {(modalidad === "equipo" ? OPCIONES_EQUIPOS : OPCIONES_JUGADORES).map((n) => (
                     <option key={n} value={n}>
-                      {n}
+                      {etiquetaCantidad(n)}
                     </option>
                   ))}
                 </select>
@@ -245,6 +257,63 @@ export default function NuevoTorneoPage() {
                 onChange={(e) => setDescripcion(e.target.value)}
                 className="w-full bg-black border border-zinc-700 rounded-xl p-4 resize-none"
               />
+            </div>
+
+            <div className="mt-8">
+              <label className="block mb-3 font-bold">Reglas del torneo</label>
+              <select
+                value={reglas}
+                onChange={(e) => setReglas(e.target.value as ReglasId)}
+                className="w-full bg-black border border-zinc-700 rounded-xl p-4 outline-none focus:border-red-600"
+              >
+                {OPCIONES_REGLAS.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-sm text-zinc-500">
+                Son las reglas que ven los jugadores en la llave del torneo.
+                {reglas === "auto" &&
+                  ` Con esta configuración se van a usar: ${etiquetaReglas(
+                    resolverReglas(juego, jugadoresMax, "auto")
+                  )}.`}
+              </p>
+            </div>
+
+            <div className="mt-8">
+              <label className="block mb-3 font-bold">Visibilidad</label>
+              <select
+                value={visible ? "visible" : "prueba"}
+                onChange={(e) => setVisible(e.target.value === "visible")}
+                className="w-full bg-black border border-zinc-700 rounded-xl p-4 outline-none focus:border-red-600"
+              >
+                <option value="visible">Torneo visible para todos</option>
+                <option value="prueba">Torneo de prueba (solo lo ven los admins)</option>
+              </select>
+              <p className="mt-2 text-sm text-zinc-500">
+                {visible
+                  ? "Aparece en la web para todos los jugadores."
+                  : "No aparece en la web ni se puede abrir por link, salvo para los admins. Después lo podés hacer visible desde Editar."}
+              </p>
+            </div>
+
+            <div className="mt-8">
+              <label className="block mb-3 font-bold">Notificar a los jugadores</label>
+              <select
+                value={visible && notificar ? "si" : "no"}
+                onChange={(e) => setNotificar(e.target.value === "si")}
+                disabled={!visible}
+                className="w-full bg-black border border-zinc-700 rounded-xl p-4 outline-none focus:border-red-600 disabled:opacity-50"
+              >
+                <option value="si">Sí, enviar notificación a los jugadores</option>
+                <option value="no">No enviar notificaciones</option>
+              </select>
+              <p className="mt-2 text-sm text-zinc-500">
+                {visible
+                  ? 'Si elegís "No", los jugadores no reciben el aviso de torneo nuevo.'
+                  : "Los torneos de prueba nunca mandan notificaciones."}
+              </p>
             </div>
 
             <div className="flex justify-end gap-5 mt-10">

@@ -17,6 +17,9 @@ import {
 import Navbar from "@/components/layout/Navbar";
 import Bracket from "@/components/torneo/Bracket";
 import ReglasPartido from "@/components/torneo/ReglasPartido";
+import FaseZonas from "@/components/torneo/FaseZonas";
+import { esFormatoZonas } from "@/lib/zonas";
+import { resolverReglas } from "@/lib/reglas";
 import DMChat from "@/components/mensajes/DMChat";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
@@ -33,6 +36,7 @@ interface Torneo {
   fecha: string;
   estado: string;
   campeon: string | null;
+  reglas?: string | null;
 }
 
 interface Partido {
@@ -53,6 +57,7 @@ interface Partido {
 
   penales_jugador1: number | null;
   penales_jugador2: number | null;
+  mapas?: number[][] | null;
 
   estado: string;
 }
@@ -82,6 +87,7 @@ function formatearFecha(fecha?: string) {
 }
 
 type Pestana = "llaves" | "reglas";
+type FaseZonasVista = "zonas" | "final";
 
 export default function LlaveTorneoPage() {
   const params = useParams();
@@ -98,6 +104,7 @@ export default function LlaveTorneoPage() {
   const [miUsuario, setMiUsuario] = useState<string | null>(null);
   const [soporteAbierto, setSoporteAbierto] = useState(false);
   const [pestana, setPestana] = useState<Pestana>("llaves");
+  const [fase, setFase] = useState<FaseZonasVista>("zonas");
 
   useEffect(() => {
     if (!authLoading) {
@@ -119,8 +126,8 @@ export default function LlaveTorneoPage() {
     }
 
     const { data: count } = await supabase.rpc("contar_inscriptos", {
-          p_torneo: id,
-        });
+      p_torneo: id,
+    });
 
     // Escudos de los equipos: se cruzan por el mismo nombre que usan los partidos
     // (nombre del equipo en torneos por equipos, usuario en los individuales).
@@ -158,6 +165,12 @@ export default function LlaveTorneoPage() {
     setInscritos(count || 0);
     setEscudos(mapaEscudos);
     setPartidos((partidosData as Partido[]) || []);
+
+    // En el formato de zonas, si ya hay semifinales armadas se abre la fase final
+    const semisArmadas = ((partidosData as Partido[]) || []).some(
+      (p) => p.ronda === 2 && !!p.jugador1
+    );
+    setFase(semisArmadas ? "final" : "zonas");
     setLoading(false);
   }
 
@@ -218,15 +231,41 @@ export default function LlaveTorneoPage() {
       partidoFinal.capitan2,
     ].includes(miUsuario);
 
-  const esTrucoBlyts = torneo.juego === "Truco Blyts";
-  const esFC26 =
-    torneo.juego === "EA SPORTS FC 26" || torneo.juego === "EA SPORTS FC 27";
-  const esCS2 = torneo.juego === "Counter-Strike 2";
-  const hayReglasEspeciales = esTrucoBlyts || esFC26 || esCS2;
+  // Reglamento del torneo: el que eligió el admin o, si dejó "Automática",
+  // el que corresponde al juego y al formato.
+  const reglasId = resolverReglas(
+    torneo.juego,
+    torneo.jugadores_max,
+    torneo.reglas
+  );
+  const hayReglasEspeciales = reglasId !== "ninguna";
   const mostrarAvisoReglas =
     !!miUsuario && partidos.length > 0 && hayReglasEspeciales;
 
   const acento = ACENTOS[torneo.juego] ?? ACENTO_GMP;
+
+  const formatoZonas = esFormatoZonas(torneo.jugadores_max);
+
+  const partidosParaBracket = partidos.map((p) => ({
+    id: p.id,
+    ronda: p.ronda,
+    numero_partido: p.numero_partido,
+
+    jugador1: p.jugador1,
+    jugador2: p.jugador2,
+
+    capitan1: p.capitan1,
+    capitan2: p.capitan2,
+
+    goles_jugador1: p.goles_jugador1,
+    goles_jugador2: p.goles_jugador2,
+
+    penales_jugador1: p.penales_jugador1,
+    penales_jugador2: p.penales_jugador2,
+
+    ganador: p.ganador,
+    mapas: p.mapas ?? null,
+  }));
 
   const estiloPagina = {
     "--accent": acento,
@@ -381,8 +420,9 @@ export default function LlaveTorneoPage() {
               </h2>
 
               <span className="rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400">
-                Eliminación directa · {torneo.jugadores_max}{" "}
-                {esEquipo ? "equipos" : "jugadores"}
+                {formatoZonas
+                  ? `2 zonas de 3 + semifinales y final · ${torneo.jugadores_max} ${esEquipo ? "equipos" : "jugadores"}`
+                  : `Eliminación directa · ${torneo.jugadores_max} ${esEquipo ? "equipos" : "jugadores"}`}
               </span>
             </div>
 
@@ -396,37 +436,65 @@ export default function LlaveTorneoPage() {
                 </p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 sm:p-6 lg:p-8">
-                <Bracket
-                  jugadoresMax={torneo.jugadores_max}
-                  miUsuario={miUsuario}
-                  torneoId={id}
-                  escudos={escudos}
-                  finalTerminada={finalTerminada}
-                  campeon={torneo.campeon}
-                  mostrarReclamar={soyCampeon}
-                  onReclamarPremio={() => setSoporteAbierto(true)}
-                  partidos={partidos.map((p) => ({
-                    id: p.id,
-                    ronda: p.ronda,
-                    numero_partido: p.numero_partido,
+              <>
+                {formatoZonas && (
+                  <div
+                    role="tablist"
+                    className="mb-5 inline-flex rounded-xl border border-zinc-800 bg-zinc-900/60 p-1"
+                  >
+                    {(
+                      [
+                        ["zonas", "Fase de zonas"],
+                        ["final", "Fase final"],
+                      ] as [FaseZonasVista, string][]
+                    ).map(([clave, texto]) => {
+                      const activa = fase === clave;
+                      return (
+                        <button
+                          key={clave}
+                          role="tab"
+                          aria-selected={activa}
+                          onClick={() => setFase(clave)}
+                          className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                            activa
+                              ? "bg-[var(--accent)] text-black"
+                              : "text-zinc-400 hover:text-white"
+                          }`}
+                        >
+                          {texto}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
-                    jugador1: p.jugador1,
-                    jugador2: p.jugador2,
-
-                    capitan1: p.capitan1,
-                    capitan2: p.capitan2,
-
-                    goles_jugador1: p.goles_jugador1,
-                    goles_jugador2: p.goles_jugador2,
-
-                    penales_jugador1: p.penales_jugador1,
-                    penales_jugador2: p.penales_jugador2,
-
-                    ganador: p.ganador,
-                  }))}
-                />
-              </div>
+                {formatoZonas && fase === "zonas" ? (
+                  <FaseZonas
+                    partidos={partidosParaBracket}
+                    torneoId={id}
+                    miUsuario={miUsuario}
+                    escudos={escudos}
+                  />
+                ) : (
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 sm:p-6 lg:p-8">
+                    <Bracket
+                      jugadoresMax={torneo.jugadores_max}
+                      miUsuario={miUsuario}
+                      torneoId={id}
+                      escudos={escudos}
+                      finalTerminada={finalTerminada}
+                      campeon={torneo.campeon}
+                      mostrarReclamar={soyCampeon}
+                      onReclamarPremio={() => setSoporteAbierto(true)}
+                      partidos={
+                        formatoZonas
+                          ? partidosParaBracket.filter((p) => p.ronda >= 2)
+                          : partidosParaBracket
+                      }
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -434,11 +502,7 @@ export default function LlaveTorneoPage() {
         {pestana === "reglas" && (
           <div className="py-8 lg:py-10 space-y-8">
             {hayReglasEspeciales && (
-              <ReglasPartido
-                esTrucoBlyts={esTrucoBlyts}
-                esFC26={esFC26}
-                esCS2={esCS2}
-              />
+              <ReglasPartido reglas={reglasId} />
             )}
 
             <div className="grid md:grid-cols-3 gap-4">

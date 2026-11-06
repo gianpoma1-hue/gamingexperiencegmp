@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
+import { empezarTorneo } from "@/lib/empezarTorneo";
 
 type Torneo = {
   id: string;
@@ -17,6 +18,7 @@ type Torneo = {
   inscripcion: number;
   fecha: string;
   estado: string;
+  visible?: boolean;
 };
 
 export default function AdminTorneosPage() {
@@ -125,6 +127,11 @@ export default function AdminTorneosPage() {
                     <div>
                       <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold">
                         {torneo.nombre}
+                        {torneo.visible === false && (
+                          <span className="ml-3 align-middle rounded-md bg-yellow-500/15 px-2 py-0.5 text-xs font-bold text-yellow-400">
+                            Prueba
+                          </span>
+                        )}
                       </h2>
 
                       <p className="text-zinc-400 text-sm sm:text-base">
@@ -164,7 +171,12 @@ export default function AdminTorneosPage() {
                         Cerrar
                       </button>
 
-                      <button className="bg-green-600 hover:bg-green-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base">
+                      <button
+                        onClick={async () => {
+                          if (await empezarTorneo(torneo.id)) cargarTorneos();
+                        }}
+                        className="bg-green-600 hover:bg-green-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base"
+                      >
                         Empezar
                       </button>
 

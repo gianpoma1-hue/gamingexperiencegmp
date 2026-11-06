@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
+import { empezarTorneo as iniciarTorneo } from "@/lib/empezarTorneo";
 
 type Torneo = {
   id: string;
@@ -16,6 +17,7 @@ type Torneo = {
   inscripcion: number;
   fecha: string;
   estado: string;
+  visible?: boolean;
 };
 
 export default function AdminTorneosPage() {
@@ -61,150 +63,7 @@ export default function AdminTorneosPage() {
   }
 
   async function empezarTorneo(torneoId: string) {
-    // Buscar inscriptos primero para poder mostrar el conteo real
-    // en el aviso de confirmación.
-    const { data: inscriptosPrevios, error: errorPrevio } = await supabase
-      .from("inscripciones")
-      .select("estado_pago")
-      .eq("torneo_id", torneoId);
-
-    if (errorPrevio) {
-      alert(errorPrevio.message);
-      return;
-    }
-
-    const confirmados =
-      inscriptosPrevios?.filter((i) => i.estado_pago === "confirmado")
-        .length ?? 0;
-
-    const confirmar = confirm(
-      `¿Querés comenzar este torneo?\n\nJugadores con pago confirmado: ${confirmados}\n\nEsta acción genera la llave y no se puede deshacer desde la web (habría que pedirle ayuda a Claude para revertirlo a mano en la base de datos).`
-    );
-
-    if (!confirmar) return;
-
-    // Evitar iniciarlo dos veces
-    const { data: existentes } = await supabase
-      .from("partidos")
-      .select("id")
-      .eq("torneo_id", torneoId)
-      .limit(1);
-
-    if (existentes && existentes.length > 0) {
-      alert("Este torneo ya fue iniciado.");
-      return;
-    }
-
-    // Saber si el torneo es individual o por equipos
-    const { data: torneoData } = await supabase
-      .from("torneos")
-      .select("modalidad")
-      .eq("id", torneoId)
-      .single();
-
-    const esPorEquipos = torneoData?.modalidad === "equipo";
-
-    // Buscar inscriptos
-    const { data: inscriptos, error } = await supabase
-      .from("inscripciones")
-      .select("*")
-      .eq("torneo_id", torneoId);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    if (!inscriptos || inscriptos.length < 2) {
-      alert("No hay suficientes jugadores.");
-      return;
-    }
-    const pagosSinConfirmar = inscriptos.filter(
-  (i) => i.estado_pago !== "confirmado"
-);
-
-if (pagosSinConfirmar.length > 0) {
-  alert(
-    "No podés iniciar el torneo hasta que TODOS los pagos estén confirmados."
-  );
-  return;
-}
-
-  // Mezclar jugadores
-const jugadores = [...inscriptos].sort(
-  () => Math.random() - 0.5
-);
-
-const partidos = [];
-
-// -------------------------
-// RONDA 1
-// -------------------------
-
-for (let i = 0; i < jugadores.length; i += 2) {
-  const nombreEntrante = (j: (typeof jugadores)[number] | undefined) =>
-    !j ? null : esPorEquipos ? j.equipo ?? j.usuario : j.usuario;
-
-  const capitanEntrante = (j: (typeof jugadores)[number] | undefined) =>
-    j?.usuario ?? null;
-
-  partidos.push({
-    torneo_id: torneoId,
-    ronda: 1,
-    numero_partido: i / 2 + 1,
-    jugador1: nombreEntrante(jugadores[i]),
-    jugador2: nombreEntrante(jugadores[i + 1]),
-    capitan1: capitanEntrante(jugadores[i]),
-    capitan2: capitanEntrante(jugadores[i + 1]),
-    estado: "Pendiente",
-  });
-}
-
-// -------------------------
-// RESTO DE RONDAS
-// -------------------------
-
-let partidosRonda = jugadores.length / 2;
-let ronda = 2;
-
-while (partidosRonda > 1) {
-  partidosRonda /= 2;
-
-  for (let i = 1; i <= partidosRonda; i++) {
-    partidos.push({
-      torneo_id: torneoId,
-      ronda,
-      numero_partido: i,
-      jugador1: null,
-      jugador2: null,
-      capitan1: null,
-      capitan2: null,
-      estado: "Pendiente",
-    });
-  }
-
-  ronda++;
-}
-
-    const { error: errorInsert } = await supabase
-      .from("partidos")
-      .insert(partidos);
-
-    if (errorInsert) {
-      alert(errorInsert.message);
-      return;
-    }
-
-    await supabase
-      .from("torneos")
-      .update({
-        estado: "En curso",
-      })
-      .eq("id", torneoId);
-
-    alert("¡Torneo iniciado correctamente!");
-
-    cargarTorneos();
+    if (await iniciarTorneo(torneoId)) cargarTorneos();
   }
     return (
     <main className="min-h-screen bg-black text-white">
@@ -261,6 +120,11 @@ while (partidosRonda > 1) {
 
                       <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold">
                         {torneo.nombre}
+                        {torneo.visible === false && (
+                          <span className="ml-3 align-middle rounded-md bg-yellow-500/15 px-2 py-0.5 text-xs font-bold text-yellow-400">
+                            Prueba
+                          </span>
+                        )}
                       </h2>
 
                       <p className="text-zinc-400 text-sm sm:text-base">

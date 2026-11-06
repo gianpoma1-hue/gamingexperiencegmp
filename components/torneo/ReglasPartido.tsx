@@ -2,10 +2,10 @@
 
 import { AlertTriangle } from "lucide-react";
 
+import type { ReglasResuelta } from "@/lib/reglas";
+
 type Props = {
-  esTrucoBlyts: boolean;
-  esFC26: boolean;
-  esCS2?: boolean;
+  reglas: ReglasResuelta;
 };
 
 type SeccionRegla = {
@@ -122,11 +122,31 @@ function renderTexto(texto: string) {
     });
 }
 
-export default function ReglasPartido({
-  esTrucoBlyts,
-  esFC26,
-  esCS2 = false,
-}: Props) {
+// Reglamento de CS2 para el formato de 6 equipos (2 zonas de 3 + semifinales y final).
+// Solo cambia la sección 1: el resto es igual al reglamento de eliminación directa.
+const REGLAS_CS2_ZONAS: SeccionRegla[] = [
+  {
+    titulo: "1. Formato del torneo (6 equipos)",
+    items: [
+      "**Modalidad:** 5 vs. 5, 6 equipos.",
+      "**Fase de zonas:** 2 zonas de 3 equipos (Zona A y Zona B), armadas por sorteo. Cada equipo juega 2 partidos a BO1 contra los otros 2 equipos de su zona.",
+      "**Clasificación:** los 2 primeros de cada zona clasifican a las semifinales.",
+      "**Posiciones:** se ordenan por 1) partidos ganados, 2) mayor diferencia de rondas (rondas a favor menos rondas en contra) y 3) más rondas ganadas en total. Si todavía hay empate, se juega una partida de desempate.",
+      "**Semifinales:** 1° Zona A vs 2° Zona B y 1° Zona B vs 2° Zona A, a BO1 (un solo mapa).",
+      "**Final:** al mejor de 3 mapas (BO3).",
+      "**Mapas:** se definen mediante veto. Los propios equipos vetan los mapas para determinar cuáles se jugarán.",
+      "El segundo puesto recibirá una inscripción gratuita para un futuro torneo de Gaming Experience GMP.",
+    ],
+  },
+  ...REGLAS_CS2.slice(1),
+];
+
+export default function ReglasPartido({ reglas }: Props) {
+  const esTrucoBlyts = reglas === "truco";
+  const esFC26 = reglas === "fc";
+  const esCS2 = reglas === "cs2-eliminacion" || reglas === "cs2-zonas";
+  const seccionesCS2 = reglas === "cs2-zonas" ? REGLAS_CS2_ZONAS : REGLAS_CS2;
+
   if (!esTrucoBlyts && !esFC26 && !esCS2) return null;
 
   return (
@@ -305,7 +325,7 @@ export default function ReglasPartido({
             torneo.
           </p>
 
-          {REGLAS_CS2.map((seccion) => (
+          {seccionesCS2.map((seccion) => (
             <div key={seccion.titulo}>
               <p className="text-sm font-bold text-yellow-500 mb-3">
                 {seccion.titulo}

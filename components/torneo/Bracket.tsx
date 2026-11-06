@@ -21,6 +21,8 @@ type Partido = {
   penales_jugador1: number | null;
   penales_jugador2: number | null;
 
+  mapas?: number[][] | null;
+
   ganador?: string | null;
 };
 
@@ -188,6 +190,7 @@ export default function Bracket({
         penalesJugador1={p.penales_jugador1}
         penalesJugador2={p.penales_jugador2}
         ganador={p.ganador ?? null}
+        mapas={p.mapas ?? null}
         miUsuario={miUsuario}
       />
     );
