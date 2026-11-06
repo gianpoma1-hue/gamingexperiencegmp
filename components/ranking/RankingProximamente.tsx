@@ -10,9 +10,9 @@ const novedades = [
   },
   {
     icono: Banknote,
-    titulo: "Premios en efectivo",
+    titulo: "Premios para los mejores",
     texto:
-      "Los mejores del ranking al cierre de cada mes se llevan plata, además de lo que ganen en cada torneo.",
+      "Los mejores del ranking al cierre de cada mes cobran su premio, además de lo que ganen en cada torneo.",
   },
   {
     icono: CalendarDays,
@@ -45,13 +45,13 @@ export default function RankingProximamente() {
           </h1>
 
           <p className="mt-5 text-lg sm:text-2xl font-bold text-white max-w-3xl mx-auto leading-snug">
-            Muy pronto, ganar torneos no va a ser la única forma de llevarte plata.
+            Muy pronto, ganar torneos no va a ser la única forma de llevarte un premio.
           </p>
 
           <p className="mt-4 text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto leading-7 sm:leading-8">
             Estamos preparando un ranking donde cada partido que juegues suma
             puntos. Subí posiciones durante el mes y, si terminás entre los
-            mejores, cobrás un premio en efectivo.
+            mejores, cobrás tu premio.
           </p>
         </div>
 
