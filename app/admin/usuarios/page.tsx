@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -34,7 +35,7 @@ export default function AdminUsuariosPage() {
 
     if (error) {
       console.error(error);
-      alert("No se pudieron cargar los usuarios.");
+      avisar("No se pudieron cargar los usuarios.");
     } else {
       setUsuarios((data as Usuario[]) || []);
     }
@@ -57,7 +58,7 @@ export default function AdminUsuariosPage() {
       .eq("id", usuario.id);
 
     if (error) {
-      alert("No se pudo actualizar el usuario.");
+      avisar("No se pudo actualizar el usuario.");
       return;
     }
 

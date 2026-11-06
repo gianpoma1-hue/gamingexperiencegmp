@@ -25,7 +25,7 @@ export default function Hero() {
         <div className="px-6 pt-28 pb-2">
           <h1 className="font-black leading-[1.05]">
             <span className="block text-[36px] sm:text-[46px] text-white">
-              SUBÍ DE NIVEL
+              JUGÁ TORNEOS
             </span>
             <span className="block text-[36px] sm:text-[46px] text-red-600 mt-2">
               GANÁ PREMIOS
@@ -85,7 +85,7 @@ export default function Hero() {
             <div className="max-w-2xl">
               <h1 className="font-black leading-[0.95]">
                 <span className="block text-[64px] text-white">
-                  SUBÍ DE NIVEL
+                  JUGÁ TORNEOS
                 </span>
                 <span className="block text-[64px] text-red-600 mt-3">
                   GANÁ PREMIOS

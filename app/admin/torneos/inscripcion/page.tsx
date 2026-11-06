@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -53,7 +54,7 @@ export default function InscripcionPage() {
 
   async function cargarDatos() {
     if (!user) {
-      alert("Debés iniciar sesión para inscribirte.");
+      avisar("Debés iniciar sesión para inscribirte.");
       router.push("/login");
       return;
     }
@@ -80,7 +81,7 @@ export default function InscripcionPage() {
     const inscritos = count || 0;
 
     if (inscritos >= torneoData.jugadores_max) {
-      alert("Este torneo ya está completo.");
+      avisar("Este torneo ya está completo.");
       router.push("/torneos");
       return;
     }
@@ -92,7 +93,7 @@ export default function InscripcionPage() {
       .single();
 
     if (perfilError || !perfilData) {
-      alert("No se encontró tu perfil.");
+      avisar("No se encontró tu perfil.");
       router.push("/");
       return;
     }
@@ -142,12 +143,12 @@ export default function InscripcionPage() {
 
     if (error) {
       if (error.code === "23505") {
-        alert("Ya estás inscripto en este torneo.");
+        avisar("Ya estás inscripto en este torneo.");
         setYaInscripto(true);
         return;
       }
 
-      alert(error.message);
+      avisar(error.message);
       return;
     }
 
@@ -275,7 +276,7 @@ export default function InscripcionPage() {
                     torneo?.juego?.toLowerCase().includes("truco") &&
                     trucoId.trim().length === 0
                   ) {
-                    alert(
+                    avisar(
                       "Ingresá el ID de Truco Blyts para continuar."
                     );
                     return;

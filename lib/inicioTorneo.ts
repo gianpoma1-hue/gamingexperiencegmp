@@ -59,3 +59,29 @@ export function partesCuenta(ms: number) {
     segundos: s % 60,
   };
 }
+
+// ---- Horario de cada partido (campo datetime-local <-> base, en hora de Argentina) ----
+
+// "2026-11-07T21:30" para un <input type="datetime-local">
+export function horarioAInput(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  // Argentina es UTC-3 todo el año
+  const ar = new Date(d.getTime() - 3 * 60 * 60 * 1000);
+  return ar.toISOString().slice(0, 16);
+}
+
+// "2026-11-07T21:30" (hora de Argentina) -> ISO para guardar, o null si está vacío
+export function inputAHorario(valor: string) {
+  if (!valor) return null;
+  const d = new Date(`${valor}:00-03:00`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+// "vie 7 nov · 21:30 h"
+export function textoHorario(iso?: string | null) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : textoInicio(d);
+}

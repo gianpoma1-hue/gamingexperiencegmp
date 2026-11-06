@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -50,13 +51,19 @@ export default function NuevoTorneoPage() {
   function cambiarJuego(nuevoJuego: string) {
     setJuego(nuevoJuego);
     if (!JUEGOS_CON_EQUIPO.includes(nuevoJuego)) {
-      setModalidad("individual");
+      cambiarModalidad("individual");
     }
+  }
+
+  // Al pasar a individual, el 6 deja de ser una opción válida
+  function cambiarModalidad(nueva: "individual" | "equipo") {
+    setModalidad(nueva);
+    if (nueva === "individual" && jugadoresMax === 6) setJugadoresMax(8);
   }
 
   async function crearTorneo() {
     if (!nombre || !premio || !inscripcion || !fecha || !hora) {
-      alert("Completá todos los campos obligatorios.");
+      avisar("Completá todos los campos obligatorios.");
       return;
     }
 
@@ -87,11 +94,11 @@ export default function NuevoTorneoPage() {
     setGuardando(false);
 
     if (error) {
-      alert(error.message);
+      avisar(error.message);
       return;
     }
 
-    alert("Torneo creado correctamente.");
+    avisar("Torneo creado correctamente.");
     router.push("/admin/torneos");
   }
 
@@ -136,7 +143,7 @@ export default function NuevoTorneoPage() {
                 <select
                   value={modalidad}
                   onChange={(e) =>
-                    setModalidad(e.target.value as "individual" | "equipo")
+                    cambiarModalidad(e.target.value as "individual" | "equipo")
                   }
                   className="w-full bg-black border border-zinc-700 rounded-xl p-4"
                 >

@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Trash2 } from "lucide-react";
@@ -122,7 +123,7 @@ export default function NotificationBell() {
       .eq("usuario", miUsuario);
 
     if (error) {
-      alert("No se pudo borrar el historial: " + error.message);
+      avisar("No se pudo borrar el historial: " + error.message);
       return;
     }
 

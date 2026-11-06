@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
@@ -18,7 +19,9 @@ const JUEGOS_CON_EQUIPO = [
   "Counter-Strike 2",
 ];
 
-const OPCIONES_JUGADORES = [2, 4, 6, 8, 16, 32, 64];
+const OPCIONES_JUGADORES = [2, 4, 8, 16, 32, 64];
+// El formato de 6 (zonas) existe solo para equipos
+const OPCIONES_EQUIPOS = [2, 4, 6, 8, 16, 32];
 
 // Cómo se muestra cada opción (el 6 usa formato especial de zonas)
 const etiquetaCantidad = (n: number) =>
@@ -63,7 +66,7 @@ export default function EditarTorneoPage() {
       .single();
 
     if (error || !data) {
-      alert("No se encontró el torneo.");
+      avisar("No se encontró el torneo.");
       router.push("/admin/torneos");
       return;
     }
@@ -92,8 +95,14 @@ export default function EditarTorneoPage() {
     setJuego(nuevoJuego);
 
     if (!JUEGOS_CON_EQUIPO.includes(nuevoJuego)) {
-      setModalidad("individual");
+      cambiarModalidad("individual");
     }
+  }
+
+  // Al pasar a individual, el 6 deja de ser una opción válida
+  function cambiarModalidad(nueva: "individual" | "equipo") {
+    setModalidad(nueva);
+    if (nueva === "individual" && jugadoresMax === 6) setJugadoresMax(8);
   }
 
   async function guardarCambios() {
@@ -104,7 +113,7 @@ export default function EditarTorneoPage() {
       !fecha ||
       !hora
     ) {
-      alert("Completá todos los campos.");
+      avisar("Completá todos los campos.");
       return;
     }
 
@@ -134,11 +143,11 @@ export default function EditarTorneoPage() {
 
     if (error) {
       console.error(error);
-      alert("Error al guardar los cambios.");
+      avisar("Error al guardar los cambios.");
       return;
     }
 
-    alert("Torneo actualizado correctamente.");
+    avisar("Torneo actualizado correctamente.");
 
     router.push("/admin/torneos");
   }
@@ -218,7 +227,7 @@ export default function EditarTorneoPage() {
                 <select
                   value={modalidad}
                   onChange={(e) =>
-                    setModalidad(e.target.value as "individual" | "equipo")
+                    cambiarModalidad(e.target.value as "individual" | "equipo")
                   }
                   className="w-full bg-black border border-zinc-700 rounded-xl p-4"
                 >
@@ -259,7 +268,7 @@ export default function EditarTorneoPage() {
 
               <div>
                 <label className="block mb-3 font-bold">
-                  Cantidad de jugadores
+                  {modalidad === "equipo" ? "Cantidad de equipos" : "Cantidad de jugadores"}
                 </label>
 
                 <select
@@ -267,7 +276,7 @@ export default function EditarTorneoPage() {
                   onChange={(e) => setJugadoresMax(Number(e.target.value))}
                   className="w-full bg-black border border-zinc-700 rounded-xl p-4"
                 >
-                  {OPCIONES_JUGADORES.map((n) => (
+                  {(modalidad === "equipo" ? OPCIONES_EQUIPOS : OPCIONES_JUGADORES).map((n) => (
                     <option key={n} value={n}>
                       {etiquetaCantidad(n)}
                     </option>

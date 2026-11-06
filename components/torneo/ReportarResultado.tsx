@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Send, Paperclip, ShieldCheck, Loader2 } from "lucide-react";
@@ -96,12 +97,12 @@ export default function ReportarResultado({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Solo se pueden adjuntar imágenes.");
+      avisar("Solo se pueden adjuntar imágenes.");
       return;
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      alert("La imagen es muy pesada. Máximo 8MB.");
+      avisar("La imagen es muy pesada. Máximo 8MB.");
       return;
     }
 
@@ -180,7 +181,7 @@ export default function ReportarResultado({
       setArchivo(null);
       await cargarMensajes();
     } catch (error: any) {
-      alert(error.message || "No se pudo enviar el reporte.");
+      avisar(error.message || "No se pudo enviar el reporte.");
     } finally {
       setEnviando(false);
     }

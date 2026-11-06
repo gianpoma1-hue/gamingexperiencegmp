@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -65,7 +66,7 @@ export default function InscripcionPage() {
 
   async function cargarDatos() {
     if (!user) {
-      alert("Debés iniciar sesión para inscribirte.");
+      avisar("Debés iniciar sesión para inscribirte.");
       router.push("/login");
       return;
     }
@@ -87,12 +88,6 @@ export default function InscripcionPage() {
 
     const inscritos = count || 0;
 
-    if (inscritos >= torneoData.jugadores_max) {
-      alert("Este torneo ya está completo.");
-      router.push("/torneos");
-      return;
-    }
-
     const { data: perfilData, error: perfilError } = await supabase
       .from("usuarios")
       .select("nombre, usuario, plataforma")
@@ -100,7 +95,7 @@ export default function InscripcionPage() {
       .single();
 
     if (perfilError || !perfilData) {
-      alert("No se encontró tu perfil.");
+      avisar("No se encontró tu perfil.");
       router.push("/");
       return;
     }
@@ -127,6 +122,20 @@ export default function InscripcionPage() {
     if (existe) {
       setYaInscripto(true);
       setEstadoPago((existe.estado_pago as EstadoPago) ?? "pendiente");
+    } else if (torneoData.estado !== "Abierto") {
+      // Si ya estás inscripto igual ves el estado de tu pago;
+      // si no, solo te podés anotar mientras el torneo está abierto.
+      avisar(
+        torneoData.estado === "Cerrado"
+          ? "Las inscripciones de este torneo están cerradas."
+          : "Este torneo ya empezó o terminó: no admite más inscripciones."
+      );
+      router.push("/torneos");
+      return;
+    } else if (inscritos >= torneoData.jugadores_max) {
+      avisar("Este torneo ya está completo.");
+      router.push("/torneos");
+      return;
     }
 
     setTorneo({
@@ -141,12 +150,12 @@ export default function InscripcionPage() {
     if (!archivo) return;
 
     if (!archivo.type.startsWith("image/")) {
-      alert("Elegí un archivo de imagen (PNG, JPG, WEBP...).");
+      avisar("Elegí un archivo de imagen (PNG, JPG, WEBP...).");
       return;
     }
 
     if (archivo.size > 5 * 1024 * 1024) {
-      alert("La imagen no puede pesar más de 5MB.");
+      avisar("La imagen no puede pesar más de 5MB.");
       return;
     }
 
@@ -180,7 +189,7 @@ export default function InscripcionPage() {
         .upload(ruta, escudoArchivo, { upsert: true });
 
       if (errorSubida) {
-        alert(
+        avisar(
           "No pudimos subir el escudo, pero tu inscripción sigue adelante. Podés pedirle a la organización que lo cargue."
         );
       } else {
@@ -210,12 +219,12 @@ export default function InscripcionPage() {
 
     if (error) {
       if (error.code === "23505") {
-        alert("Ya estás inscripto en este torneo.");
+        avisar("Ya estás inscripto en este torneo.");
         setYaInscripto(true);
         return;
       }
 
-      alert(error.message);
+      avisar(error.message);
       return;
     }
 
@@ -443,7 +452,7 @@ export default function InscripcionPage() {
                   torneo?.modalidad === "equipo" &&
                   equipo.trim().length === 0
                 ) {
-                  alert("Ingresá el nombre de tu equipo para continuar.");
+                  avisar("Ingresá el nombre de tu equipo para continuar.");
                   return;
                 }
 
@@ -451,7 +460,7 @@ export default function InscripcionPage() {
                   torneo?.juego?.toLowerCase().includes("truco") &&
                   trucoId.trim().length === 0
                 ) {
-                  alert(
+                  avisar(
                     "Ingresá tu ID de Truco Blyts para continuar — lo necesitamos para que tu rival te pueda agregar."
                   );
                   return;

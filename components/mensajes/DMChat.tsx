@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Send, Paperclip, Loader2, ShieldCheck } from "lucide-react";
@@ -100,12 +101,12 @@ export default function DMChat({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Solo se pueden adjuntar imágenes.");
+      avisar("Solo se pueden adjuntar imágenes.");
       return;
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      alert("La imagen es muy pesada. Máximo 8MB.");
+      avisar("La imagen es muy pesada. Máximo 8MB.");
       return;
     }
 
@@ -154,7 +155,7 @@ export default function DMChat({
       setArchivo(null);
       await cargarMensajes();
     } catch (error: any) {
-      alert(error.message || "No se pudo enviar el mensaje.");
+      avisar(error.message || "No se pudo enviar el mensaje.");
     } finally {
       setEnviando(false);
     }

@@ -1,11 +1,14 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
 import { guardarResultado, editarResultado } from "@/lib/tournament";
 import { esFormatoZonas, zonaDelPartido, fechaDelPartido } from "@/lib/zonas";
+import { horarioAInput, inputAHorario, textoHorario } from "@/lib/inicioTorneo";
+import { CalendarClock } from "lucide-react";
 
 const JUEGOS_CON_GOLES = ["EA SPORTS FC 26", "EA SPORTS FC 27"];
 
@@ -27,6 +30,12 @@ interface Partido {
 
   // Detalle por mapa (final al mejor de 3): [[13,9],[8,13],[13,11]]
   mapas: (number | null)[][] | null;
+
+  capitan1: string | null;
+  capitan2: string | null;
+
+  // Día y hora del partido (lo carga el admin)
+  horario: string | null;
 }
 
 // Los 3 casilleros de mapas de un partido al mejor de 3 (vacíos si no hay datos)
@@ -75,6 +84,64 @@ export default function AdministrarResultadosPage() {
   const [formatoZonas, setFormatoZonas] = useState(false);
   const [partidos, setPartidos] = useState<Partido[]>([]);
   const [ganadoresElegidos, setGanadoresElegidos] = useState<Record<string, string>>({});
+  const [nombreTorneo, setNombreTorneo] = useState("");
+  // Horario que se está editando en cada partido (valor del campo fecha y hora)
+  const [horarios, setHorarios] = useState<Record<string, string>>({});
+  const [guardandoHorarioId, setGuardandoHorarioId] = useState<string | null>(null);
+
+  async function guardarHorario(partido: Partido) {
+    const valor = horarios[partido.id] ?? horarioAInput(partido.horario);
+    const nuevo = inputAHorario(valor);
+
+    if (valor && !nuevo) {
+      avisar("La fecha y hora no es válida.");
+      return;
+    }
+
+    if (nuevo === partido.horario || (!nuevo && !partido.horario)) return;
+
+    setGuardandoHorarioId(partido.id);
+
+    const { data, error } = await supabase
+      .from("partidos")
+      .update({ horario: nuevo })
+      .eq("id", partido.id)
+      .select("id");
+
+    if (error || !data?.length) {
+      setGuardandoHorarioId(null);
+      avisar("No se pudo guardar el horario" + (error ? ": " + error.message : "."));
+      return;
+    }
+
+    // Avisar a los dos capitanes (si ya están definidos)
+    const texto = textoHorario(nuevo);
+    const avisos = [
+      { capitan: partido.capitan1, rival: partido.jugador2 },
+      { capitan: partido.capitan2, rival: partido.jugador1 },
+    ]
+      .filter((a) => a.capitan && a.rival && texto)
+      .map((a) => ({
+        usuario: a.capitan as string,
+        tipo: "horario_partido",
+        titulo: partido.horario ? "Cambió el horario de tu partido" : "Ya tenés horario para tu partido",
+        contenido: `${nombreTorneo ? nombreTorneo + " · " : ""}vs ${a.rival}: ${texto}`,
+        link: `/torneos/llave/${id}`,
+        leida: false,
+      }));
+
+    if (avisos.length > 0) {
+      await supabase.from("notificaciones").insert(avisos);
+    }
+
+    setPartidos((prev) => prev.map((p) => (p.id === partido.id ? { ...p, horario: nuevo } : p)));
+    setHorarios((prev) => {
+      const copia = { ...prev };
+      delete copia[partido.id];
+      return copia;
+    });
+    setGuardandoHorarioId(null);
+  }
 
   const esJuegoConGoles = JUEGOS_CON_GOLES.includes(juego);
 
@@ -113,11 +180,12 @@ export default function AdministrarResultadosPage() {
   async function cargarTorneoYPartidos() {
     const { data: torneoData } = await supabase
       .from("torneos")
-      .select("juego, jugadores_max")
+      .select("nombre, juego, jugadores_max")
       .eq("id", id)
       .single();
 
     setJuego(torneoData?.juego ?? "");
+    setNombreTorneo(torneoData?.nombre ?? "");
     setFormatoZonas(esFormatoZonas(torneoData?.jugadores_max));
 
     const { data, error } = await supabase
@@ -154,7 +222,7 @@ export default function AdministrarResultadosPage() {
         const r = resultadoBO3(partido);
 
         if ("error" in r) {
-          alert(r.error);
+          avisar(r.error);
           setGuardando(false);
           return;
         }
@@ -172,7 +240,7 @@ export default function AdministrarResultadosPage() {
           partido.goles_jugador1 === null ||
           partido.goles_jugador2 === null
         ) {
-          alert("Completá ambos resultados.");
+          avisar("Completá ambos resultados.");
           setGuardando(false);
           return;
         }
@@ -190,7 +258,7 @@ export default function AdministrarResultadosPage() {
         const ganador = ganadoresElegidos[partido.id] ?? partido.ganador;
 
         if (!ganador) {
-          alert("Elegí quién ganó el partido.");
+          avisar("Elegí quién ganó el partido.");
           setGuardando(false);
           return;
         }
@@ -205,13 +273,13 @@ export default function AdministrarResultadosPage() {
 
       await cargarTorneoYPartidos();
 
-      alert(
+      avisar(
         yaFinalizado
           ? "Resultado corregido correctamente."
           : "Resultado guardado correctamente."
       );
     } catch (error: any) {
-      alert(error.message);
+      avisar(error.message);
     } finally {
       setGuardando(false);
     }
@@ -248,6 +316,40 @@ export default function AdministrarResultadosPage() {
 
                   <span className="text-red-500 font-bold">
                     {partido.estado}
+                  </span>
+                </div>
+
+                {/* Horario del partido */}
+                <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl bg-black/40 px-4 py-3">
+                  <CalendarClock size={18} className="text-zinc-400 shrink-0" />
+                  <label htmlFor={`horario-${partido.id}`} className="text-sm font-semibold text-zinc-300">
+                    Horario
+                  </label>
+                  <input
+                    id={`horario-${partido.id}`}
+                    type="datetime-local"
+                    value={horarios[partido.id] ?? horarioAInput(partido.horario)}
+                    onChange={(e) =>
+                      setHorarios((prev) => ({ ...prev, [partido.id]: e.target.value }))
+                    }
+                    className="bg-black border border-zinc-700 rounded-lg px-3 py-1.5 text-sm [color-scheme:dark]"
+                  />
+                  {horarios[partido.id] !== undefined &&
+                    horarios[partido.id] !== horarioAInput(partido.horario) && (
+                      <button
+                        onClick={() => guardarHorario(partido)}
+                        disabled={guardandoHorarioId === partido.id}
+                        className="rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-1.5 text-sm font-bold disabled:opacity-60"
+                      >
+                        {guardandoHorarioId === partido.id ? "Guardando..." : "Guardar horario"}
+                      </button>
+                    )}
+                  <span className="text-xs text-zinc-500">
+                    {partido.horario
+                      ? `Hora de Argentina. Al cambiarlo se avisa a los capitanes.`
+                      : partido.capitan1 && partido.capitan2
+                        ? "Hora de Argentina. Al guardarlo se avisa a los dos capitanes."
+                        : "Hora de Argentina. Todavía no están definidos los dos equipos."}
                   </span>
                 </div>
 

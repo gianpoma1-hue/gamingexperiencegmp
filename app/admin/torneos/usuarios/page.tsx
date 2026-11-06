@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "@/lib/avisos";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -130,12 +131,12 @@ function AdminUsuariosTorneoContenido() {
       .select("id");
 
     if (error) {
-      alert("No se pudo guardar el cambio: " + error.message);
+      avisar("No se pudo guardar el cambio: " + error.message);
       return false;
     }
 
     if (!data || data.length === 0) {
-      alert(
+      avisar(
         "Supabase no permitió modificar esta inscripción (falta el permiso de admin). Ejecutá el SQL \"permisos-admin-inscripciones\" en Supabase y probá de nuevo."
       );
       return false;
@@ -153,7 +154,7 @@ function AdminUsuariosTorneoContenido() {
     const nuevo = nombreEditando.trim();
 
     if (!nuevo) {
-      alert("Ingresá un nombre para el equipo.");
+      avisar("Ingresá un nombre para el equipo.");
       return;
     }
 
@@ -169,7 +170,7 @@ function AdminUsuariosTorneoContenido() {
     );
 
     if (repetido) {
-      alert("Ya hay otro equipo con ese nombre en este torneo.");
+      avisar("Ya hay otro equipo con ese nombre en este torneo.");
       return;
     }
 
@@ -213,7 +214,7 @@ function AdminUsuariosTorneoContenido() {
     const falla = resultados.find((r) => r.error);
 
     if (falla?.error) {
-      alert(
+      avisar(
         "Se guardó el nombre, pero no se pudo actualizar en la llave: " +
           falla.error.message
       );
@@ -231,12 +232,12 @@ function AdminUsuariosTorneoContenido() {
     if (!archivo) return;
 
     if (!archivo.type.startsWith("image/")) {
-      alert("Elegí un archivo de imagen (PNG, JPG, WEBP...).");
+      avisar("Elegí un archivo de imagen (PNG, JPG, WEBP...).");
       return;
     }
 
     if (archivo.size > 5 * 1024 * 1024) {
-      alert("La imagen no puede pesar más de 5MB.");
+      avisar("La imagen no puede pesar más de 5MB.");
       return;
     }
 
@@ -247,7 +248,7 @@ function AdminUsuariosTorneoContenido() {
       const adminId = authData.user?.id;
 
       if (!adminId) {
-        alert("Tu sesión venció. Volvé a iniciar sesión.");
+        avisar("Tu sesión venció. Volvé a iniciar sesión.");
         return;
       }
 
@@ -259,7 +260,7 @@ function AdminUsuariosTorneoContenido() {
         .upload(ruta, archivo, { upsert: true });
 
       if (uploadError) {
-        alert("No se pudo subir el escudo: " + uploadError.message);
+        avisar("No se pudo subir el escudo: " + uploadError.message);
         return;
       }
 
@@ -310,7 +311,7 @@ function AdminUsuariosTorneoContenido() {
     const entra = inscripciones.find((x) => x.id === reemplazoElegido);
 
     if (!entra) {
-      alert("Elegí quién entra en su lugar.");
+      avisar("Elegí quién entra en su lugar.");
       return;
     }
 
@@ -350,7 +351,7 @@ function AdminUsuariosTorneoContenido() {
     const falla = r1.error ?? r2.error;
 
     if (falla) {
-      alert("No se pudieron actualizar los partidos: " + falla.message);
+      avisar("No se pudieron actualizar los partidos: " + falla.message);
       setReemplazando(false);
       return;
     }
@@ -365,11 +366,11 @@ function AdminUsuariosTorneoContenido() {
     setReemplazando(false);
 
     if (errorBorrar) {
-      alert(
+      avisar(
         `Se pasaron ${cambiados} partido(s) a "${nuevo}", pero no se pudo borrar la inscripción de "${viejo}". Quitala a mano.`
       );
     } else {
-      alert(`Listo: "${nuevo}" entró en lugar de "${viejo}" (${cambiados} partido(s) pendientes actualizados).`);
+      avisar(`Listo: "${nuevo}" entró en lugar de "${viejo}" (${cambiados} partido(s) pendientes actualizados).`);
     }
 
     cargarInscripciones(torneoId);
@@ -391,7 +392,7 @@ function AdminUsuariosTorneoContenido() {
       .eq("id", inscripcion.id);
 
     if (error) {
-      alert("No se pudo eliminar al usuario.");
+      avisar("No se pudo eliminar al usuario.");
       return;
     }
 
@@ -417,7 +418,7 @@ function AdminUsuariosTorneoContenido() {
 
     if (!usuarioEncontrado) {
       setAgregando(false);
-      alert(`No se encontró ningún usuario con el nombre "${nombreBuscado}".`);
+      avisar(`No se encontró ningún usuario con el nombre "${nombreBuscado}".`);
       return;
     }
 
@@ -428,7 +429,7 @@ function AdminUsuariosTorneoContenido() {
 
     if (yaInscripto) {
       setAgregando(false);
-      alert("Ese usuario ya está inscripto en este torneo.");
+      avisar("Ese usuario ya está inscripto en este torneo.");
       return;
     }
 
@@ -444,7 +445,7 @@ function AdminUsuariosTorneoContenido() {
       )
     ) {
       setAgregando(false);
-      alert("Ya hay otro equipo con ese nombre en este torneo.");
+      avisar("Ya hay otro equipo con ese nombre en este torneo.");
       return;
     }
 
@@ -454,7 +455,7 @@ function AdminUsuariosTorneoContenido() {
 
     if (inscritosNoRechazados >= torneo.jugadores_max) {
       setAgregando(false);
-      alert("El torneo ya está completo.");
+      avisar("El torneo ya está completo.");
       return;
     }
 
@@ -470,7 +471,7 @@ function AdminUsuariosTorneoContenido() {
 
     if (insertError) {
       setAgregando(false);
-      alert("No se pudo agregar al usuario: " + insertError.message);
+      avisar("No se pudo agregar al usuario: " + insertError.message);
       return;
     }
 

@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
@@ -135,7 +136,7 @@ export default function MensajesPage() {
     );
 
     if (yaExiste) {
-      alert("Ya existe una solicitud o amistad con ese usuario.");
+      avisar("Ya existe una solicitud o amistad con ese usuario.");
       return;
     }
 
@@ -146,7 +147,7 @@ export default function MensajesPage() {
     });
 
     if (error) {
-      alert("No se pudo enviar la solicitud.");
+      avisar("No se pudo enviar la solicitud.");
       return;
     }
 
@@ -171,7 +172,7 @@ export default function MensajesPage() {
       .eq("id", id);
 
     if (error) {
-      alert("No se pudo actualizar la solicitud.");
+      avisar("No se pudo actualizar la solicitud.");
       return;
     }
 

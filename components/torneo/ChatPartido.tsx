@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Send } from "lucide-react";
@@ -68,7 +69,7 @@ export default function ChatPartido({
     setEnviando(false);
 
     if (error) {
-      alert("No se pudo enviar el mensaje.");
+      avisar("No se pudo enviar el mensaje.");
       return;
     }
 

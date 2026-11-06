@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -35,7 +36,7 @@ export default function DashboardLayout({
       .single();
 
     if (error || !data?.es_admin) {
-      alert("No tenés permisos para acceder a esta sección.");
+      avisar("No tenés permisos para acceder a esta sección.");
       router.push("/");
       return;
     }

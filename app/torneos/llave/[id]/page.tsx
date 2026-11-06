@@ -61,6 +61,7 @@ interface Partido {
   penales_jugador1: number | null;
   penales_jugador2: number | null;
   mapas?: number[][] | null;
+  horario?: string | null;
 
   estado: string;
 }
@@ -273,6 +274,7 @@ export default function LlaveTorneoPage() {
 
     ganador: p.ganador,
     mapas: p.mapas ?? null,
+    horario: p.horario ?? null,
   }));
 
   const estiloPagina = {

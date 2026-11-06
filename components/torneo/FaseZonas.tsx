@@ -16,6 +16,7 @@ type Partido = PartidoZona & {
   capitan2?: string | null;
   penales_jugador1: number | null;
   penales_jugador2: number | null;
+  horario?: string | null;
 };
 
 type Props = {
@@ -164,6 +165,7 @@ export default function FaseZonas({
                     penalesJugador1={p.penales_jugador1}
                     penalesJugador2={p.penales_jugador2}
                     ganador={p.ganador ?? null}
+                    horario={p.horario ?? null}
                     miUsuario={miUsuario}
                     reportarHabilitado={reportarHabilitado}
                   />

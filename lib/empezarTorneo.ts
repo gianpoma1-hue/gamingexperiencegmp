@@ -1,7 +1,8 @@
+import { avisar } from "@/lib/avisos";
 import { supabase } from "./supabase";
 
 // Arranca un torneo: genera la llave (o las 2 zonas en el formato de 6) y lo pasa a "En curso".
-// Pide confirmación y avisa con alert(). Devuelve true si el torneo se inició.
+// Pide confirmación y muestra avisos. Devuelve true si el torneo se inició.
 // La usan Admin › Dashboard y Admin › Torneos.
 export async function empezarTorneo(torneoId: string): Promise<boolean> {
     // Buscar inscriptos primero para poder mostrar el conteo real
@@ -12,7 +13,7 @@ export async function empezarTorneo(torneoId: string): Promise<boolean> {
       .eq("torneo_id", torneoId);
 
     if (errorPrevio) {
-      alert(errorPrevio.message);
+      avisar(errorPrevio.message);
       return false;
     }
 
@@ -34,7 +35,7 @@ export async function empezarTorneo(torneoId: string): Promise<boolean> {
       .limit(1);
 
     if (existentes && existentes.length > 0) {
-      alert("Este torneo ya fue iniciado.");
+      avisar("Este torneo ya fue iniciado.");
       return false;
     }
 
@@ -54,12 +55,12 @@ export async function empezarTorneo(torneoId: string): Promise<boolean> {
       .eq("torneo_id", torneoId);
 
     if (error) {
-      alert(error.message);
+      avisar(error.message);
       return false;
     }
 
     if (!inscriptos || inscriptos.length < 2) {
-      alert("No hay suficientes jugadores.");
+      avisar("No hay suficientes jugadores.");
       return false;
     }
     const pagosSinConfirmar = inscriptos.filter(
@@ -67,7 +68,7 @@ export async function empezarTorneo(torneoId: string): Promise<boolean> {
 );
 
 if (pagosSinConfirmar.length > 0) {
-  alert(
+  avisar(
     "No podés iniciar el torneo hasta que TODOS los pagos estén confirmados."
   );
   return false;
@@ -83,7 +84,7 @@ const jugadores = [...inscriptos].sort(
 // -------------------------
 if (torneoData?.jugadores_max === 6) {
   if (jugadores.length !== 6) {
-    alert(
+    avisar(
       "El formato de 2 zonas de 3 necesita exactamente 6 inscriptos. Ahora hay " +
         jugadores.length +
         "."
@@ -132,7 +133,7 @@ if (torneoData?.jugadores_max === 6) {
     .insert(partidosZona);
 
   if (errorZonas) {
-    alert(errorZonas.message);
+    avisar(errorZonas.message);
     return false;
   }
 
@@ -141,7 +142,7 @@ if (torneoData?.jugadores_max === 6) {
     .update({ estado: "En curso" })
     .eq("id", torneoId);
 
-  alert("¡Llave armada! Se armaron las 2 zonas por sorteo. Los jugadores ya ven sus cruces y la cuenta regresiva hasta la hora de inicio.");
+  avisar("¡Llave armada! Se armaron las 2 zonas por sorteo. Los jugadores ya ven sus cruces y la cuenta regresiva hasta la hora de inicio.");
   return true;
 }
 
@@ -201,7 +202,7 @@ while (partidosRonda > 1) {
       .insert(partidos);
 
     if (errorInsert) {
-      alert(errorInsert.message);
+      avisar(errorInsert.message);
       return false;
     }
 
@@ -212,6 +213,6 @@ while (partidosRonda > 1) {
       })
       .eq("id", torneoId);
 
-    alert("¡Llave armada! Los jugadores ya ven sus cruces y la cuenta regresiva hasta la hora de inicio.");
+    avisar("¡Llave armada! Los jugadores ya ven sus cruces y la cuenta regresiva hasta la hora de inicio.");
     return true;
 }

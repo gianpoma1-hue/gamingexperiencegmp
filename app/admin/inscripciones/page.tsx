@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -57,7 +58,7 @@ export default function AdminInscripcionesPage() {
 
     if (error) {
       console.error(error);
-      alert("Error al cargar las inscripciones.");
+      avisar("Error al cargar las inscripciones.");
     } else {
       setInscripciones((data as Inscripcion[]) || []);
     }
@@ -75,7 +76,7 @@ export default function AdminInscripcionesPage() {
       .eq("id", id);
 
     if (error) {
-      alert("No se pudo actualizar el estado del pago.");
+      avisar("No se pudo actualizar el estado del pago.");
       return;
     }
 
@@ -112,7 +113,7 @@ export default function AdminInscripcionesPage() {
       .eq("id", id);
 
     if (error) {
-      alert("No se pudo eliminar.");
+      avisar("No se pudo eliminar.");
       return;
     }
 

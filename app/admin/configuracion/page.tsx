@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -46,11 +47,11 @@ export default function AdminConfiguracionPage() {
     setGuardando(false);
 
     if (error) {
-      alert("No se pudo guardar: " + error.message);
+      avisar("No se pudo guardar: " + error.message);
       return;
     }
 
-    alert("Datos de pago actualizados. Ya se van a mostrar así en la inscripción a torneos.");
+    avisar("Datos de pago actualizados. Ya se van a mostrar así en la inscripción a torneos.");
   }
 
   const ideas = [

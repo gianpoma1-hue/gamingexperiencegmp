@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MessageCircle, ImageUp } from "lucide-react";
 import ChatPartido from "./ChatPartido";
 import ReportarResultado from "./ReportarResultado";
+import { textoHorario } from "@/lib/inicioTorneo";
 
 type MatchCardProps = {
   id: string;
@@ -41,6 +42,9 @@ type MatchCardProps = {
 
   // Detalle por mapa en partidos al mejor de 3: [[13,9],[8,13],[13,11]]
   mapas?: number[][] | null;
+
+  // Día y hora del partido (ISO)
+  horario?: string | null;
 
   miUsuario?: string | null;
   // false hasta la hora de inicio del torneo: no se puede reportar resultado
@@ -164,6 +168,7 @@ export default function MatchCard({
   penalesJugador2,
   ganador,
   mapas,
+  horario,
   reportarHabilitado = true,
   miUsuario,
 }: MatchCardProps) {
@@ -190,7 +195,7 @@ export default function MatchCard({
   const estado = finalizado
     ? { texto: "Finalizado", punto: "bg-zinc-500", color: "text-zinc-400" }
     : listo
-    ? { texto: "Por jugar", punto: "bg-[var(--accent)]", color: "text-[var(--accent)]" }
+    ? { texto: textoHorario(horario) ?? "Por jugar", punto: "bg-[var(--accent)]", color: "text-[var(--accent)]" }
     : { texto: "Por definir", punto: "bg-zinc-700", color: "text-zinc-500" };
 
   return (

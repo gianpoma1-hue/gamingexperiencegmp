@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import Avisos from "@/components/ui/Avisos";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     locale: "es_AR",
     url: "https://gmpgaming.com",
     siteName: "GMP Gaming",
-    title: "GMP Gaming | Subí de nivel. Ganá premios.",
+    title: "GMP Gaming | Jugá torneos. Ganá premios.",
     description:
       "Torneos online de videojuegos con premios reales. Registrate gratis, elegí tu torneo y competí.",
     images: [
@@ -35,13 +36,13 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "GMP Gaming - Subí de nivel. Ganá premios.",
+        alt: "GMP Gaming - Jugá torneos. Ganá premios.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "GMP Gaming | Subí de nivel. Ganá premios.",
+    title: "GMP Gaming | Jugá torneos. Ganá premios.",
     description:
       "Torneos online de videojuegos con premios reales. Registrate gratis y competí.",
     images: ["/og.png"],
@@ -76,6 +77,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
+        <Avisos />
       </body>
     </html>
   );

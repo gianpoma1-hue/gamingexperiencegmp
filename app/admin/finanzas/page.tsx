@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -95,7 +96,7 @@ export default function AdminFinanzasPage() {
 
   async function agregarEgreso() {
     if (!concepto.trim() || !monto || isNaN(Number(monto))) {
-      alert("Completá el concepto y un monto válido.");
+      avisar("Completá el concepto y un monto válido.");
       return;
     }
 
@@ -109,7 +110,7 @@ export default function AdminFinanzasPage() {
     setGuardando(false);
 
     if (error) {
-      alert("No se pudo guardar: " + error.message);
+      avisar("No se pudo guardar: " + error.message);
       return;
     }
 
@@ -156,7 +157,7 @@ export default function AdminFinanzasPage() {
         });
 
       if (errorHistorial) {
-        alert("No se pudo guardar el historial: " + errorHistorial.message);
+        avisar("No se pudo guardar el historial: " + errorHistorial.message);
         setReseteando(false);
         return;
       }
@@ -169,7 +170,7 @@ export default function AdminFinanzasPage() {
       .eq("archivado_finanzas", false);
 
     if (errorInscripciones) {
-      alert("No se pudieron archivar los ingresos: " + errorInscripciones.message);
+      avisar("No se pudieron archivar los ingresos: " + errorInscripciones.message);
       setReseteando(false);
       return;
     }
@@ -180,13 +181,13 @@ export default function AdminFinanzasPage() {
       .gte("created_at", "1900-01-01");
 
     if (errorEgresos) {
-      alert("No se pudieron borrar los egresos: " + errorEgresos.message);
+      avisar("No se pudieron borrar los egresos: " + errorEgresos.message);
       setReseteando(false);
       return;
     }
 
     setReseteando(false);
-    alert(
+    avisar(
       guardarEnHistorial
         ? "Finanzas reseteadas y período guardado en el historial."
         : "Finanzas reseteadas (sin guardar en el historial)."

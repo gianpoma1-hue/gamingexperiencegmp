@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -73,11 +74,11 @@ export default function AdminRankingPage() {
     setGuardandoFecha(false);
 
     if (error) {
-      alert("No se pudo guardar la fecha: " + error.message);
+      avisar("No se pudo guardar la fecha: " + error.message);
       return;
     }
 
-    alert("Fecha de fin del ranking actualizada.");
+    avisar("Fecha de fin del ranking actualizada.");
   }
 
   async function reiniciarRanking() {
@@ -115,14 +116,14 @@ export default function AdminRankingPage() {
     setReiniciando(false);
 
     if (error || errorJuegos) {
-      alert(
+      avisar(
         "No se pudo reiniciar el ranking: " +
           (error?.message || errorJuegos?.message)
       );
       return;
     }
 
-    alert("Ranking reiniciado correctamente.");
+    avisar("Ranking reiniciado correctamente.");
     cargarRanking();
   }
 

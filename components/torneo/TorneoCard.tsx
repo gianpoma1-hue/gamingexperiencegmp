@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { fechaTorneo, horaTorneo } from "@/lib/formatoFecha";
 import { useRouter } from "next/navigation";
 import { Swords } from "lucide-react";
 
@@ -106,9 +107,7 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
         <div>
           <p className="text-zinc-500 text-xs lg:text-sm">Fecha</p>
           <h3 className="text-sm sm:text-lg font-bold">
-            {new Date(torneo.fecha).toLocaleDateString("es-AR", {
-              timeZone: "UTC",
-            })}
+            {fechaTorneo(torneo.fecha)}
           </h3>
         </div>
 
@@ -118,7 +117,7 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
               Hora de comienzo
             </p>
             <h3 className="text-sm sm:text-lg font-bold">
-              {torneo.hora}
+              {horaTorneo(torneo.hora)}
             </h3>
           </div>
         )}
@@ -148,13 +147,6 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
             </p>
           </div>
         </div>
-      ) : completo ? (
-        <button
-          disabled
-          className="mt-6 lg:mt-8 w-full bg-zinc-700 cursor-not-allowed rounded-xl py-3 lg:py-4 font-bold text-base lg:text-lg"
-        >
-          TORNEO COMPLETO
-        </button>
       ) : torneo.miInscripcion === "confirmado" ? (
         <button
           disabled
@@ -168,6 +160,13 @@ export default function TorneoCard({ torneo }: { torneo: TorneoCardData }) {
           className="mt-6 lg:mt-8 w-full flex items-center justify-center gap-2 rounded-xl py-3 lg:py-4 font-bold text-base lg:text-lg bg-yellow-950/30 border border-yellow-600 text-yellow-400 cursor-default"
         >
           ⏳ Pago pendiente de confirmación
+        </button>
+      ) : torneo.estado === "Cerrado" || completo ? (
+        <button
+          disabled
+          className="mt-6 lg:mt-8 w-full bg-zinc-700 cursor-not-allowed rounded-xl py-3 lg:py-4 font-bold text-base lg:text-lg"
+        >
+          {torneo.estado === "Cerrado" ? "INSCRIPCIONES CERRADAS" : "TORNEO COMPLETO"}
         </button>
       ) : (
         <button

@@ -1,5 +1,6 @@
 "use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -121,12 +122,12 @@ export default function PerfilPage() {
     if (!archivo || !user) return;
 
     if (!archivo.type.startsWith("image/")) {
-      alert("Elegí un archivo de imagen.");
+      avisar("Elegí un archivo de imagen.");
       return;
     }
 
     if (archivo.size > 5 * 1024 * 1024) {
-      alert("La imagen no puede pesar más de 5MB.");
+      avisar("La imagen no puede pesar más de 5MB.");
       return;
     }
 
@@ -140,7 +141,7 @@ export default function PerfilPage() {
       .upload(ruta, archivo, { upsert: true });
 
     if (uploadError) {
-      alert("No se pudo subir la foto: " + uploadError.message);
+      avisar("No se pudo subir la foto: " + uploadError.message);
       setSubiendoFoto(false);
       return;
     }
@@ -159,7 +160,7 @@ export default function PerfilPage() {
     setSubiendoFoto(false);
 
     if (updateError) {
-      alert("No se pudo guardar la foto: " + updateError.message);
+      avisar("No se pudo guardar la foto: " + updateError.message);
       return;
     }
 

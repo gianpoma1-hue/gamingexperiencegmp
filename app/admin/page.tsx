@@ -1,11 +1,13 @@
 "use client";
 
+import { avisar } from "@/lib/avisos";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { supabase } from "@/lib/supabase";
 import { empezarTorneo as iniciarTorneo } from "@/lib/empezarTorneo";
+import { alternarInscripciones } from "@/lib/alternarInscripciones";
 
 type Torneo = {
   id: string;
@@ -53,11 +55,11 @@ export default function AdminTorneosPage() {
       .eq("id", id);
 
     if (error) {
-      alert(error.message);
+      avisar(error.message);
       return;
     }
 
-    alert("Torneo eliminado.");
+    avisar("Torneo eliminado.");
 
     cargarTorneos();
   }
@@ -178,11 +180,16 @@ export default function AdminTorneosPage() {
                         Usuarios
                       </button>
 
-                      <button
-                        className="bg-yellow-600 hover:bg-yellow-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base"
-                      >
-                        Cerrar
-                      </button>
+                      {(torneo.estado === "Abierto" || torneo.estado === "Cerrado") && (
+                        <button
+                          onClick={async () => {
+                            if (await alternarInscripciones(torneo)) cargarTorneos();
+                          }}
+                          className="bg-yellow-600 hover:bg-yellow-700 px-4 sm:px-5 py-2 rounded-lg text-sm sm:text-base"
+                        >
+                          {torneo.estado === "Abierto" ? "Cerrar inscripciones" : "Reabrir inscripciones"}
+                        </button>
+                      )}
 
                      {torneo.estado === "En curso" ? (
 

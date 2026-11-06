@@ -1,3 +1,4 @@
+import { fechaTorneo, horaTorneo } from "@/lib/formatoFecha";
 import Link from "next/link";
 import { Swords, CalendarDays, Users } from "lucide-react";
 import { buscarJuego } from "@/lib/games";
@@ -71,11 +72,9 @@ export default function ProximoTorneoCard({ torneo }: { torneo: TorneoCardData }
         {/* Fecha */}
         <p className="mt-4 flex items-center gap-1.5 text-sm text-zinc-300">
           <CalendarDays className="w-4 h-4 text-zinc-500" />
-          {new Date(torneo.fecha).toLocaleDateString("es-AR", { timeZone: "UTC" })}
+          {fechaTorneo(torneo.fecha)}
           {torneo.hora && (
-            <span className="text-zinc-500">
-              · {torneo.hora.replace(/^(\d{1,2}:\d{2}):\d{2}.*$/, "$1")}
-            </span>
+            <span className="text-zinc-500">· {horaTorneo(torneo.hora)}</span>
           )}
         </p>
 
