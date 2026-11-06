@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { errorPassword } from "@/lib/validarPassword";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -40,8 +41,9 @@ export default function RegisterForm() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    const errorClave = errorPassword(password);
+    if (errorClave) {
+      setError(errorClave);
       return;
     }
 
@@ -156,7 +158,7 @@ export default function RegisterForm() {
 
         <input
           type="password"
-          placeholder="Contraseña"
+          placeholder="Contraseña (mín. 8, con letras y números)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-xl bg-black border border-zinc-700 p-3"

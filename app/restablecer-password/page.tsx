@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/lib/supabase";
+import { errorPassword } from "@/lib/validarPassword";
 
 export default function RestablecerPasswordPage() {
   const router = useRouter();
@@ -35,8 +36,9 @@ export default function RestablecerPasswordPage() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 6) {
-      setError("La contraseña tiene que tener al menos 6 caracteres.");
+    const errorClave = errorPassword(password);
+    if (errorClave) {
+      setError(errorClave);
       return;
     }
 
